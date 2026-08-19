@@ -9,6 +9,18 @@ api_key_env = "OPENROUTER_API_KEY"
 id = "nvidia/nemotron-3.5-lightning:free"
 llm_client = "openrouter"
 
+[targets.judge]
+id = "nvidia/nemotron-3.5-lightning:free"
+llm_client = "openrouter"
+
+[targets.executor]
+id = "nvidia/nemotron-3.5-lightning:free"
+llm_client = "openrouter"
+
+[targets.advisor]
+id = "nvidia/nemotron-3-ultra-550b-a55b:free"
+llm_client = "openrouter"
+
 [targets.weak]
 id = "nvidia/nemotron-3.5-lightning:free"
 llm_client = "openrouter"
@@ -17,8 +29,25 @@ llm_client = "openrouter"
 id = "nvidia/nemotron-3-ultra-550b-a55b:free"
 llm_client = "openrouter"
 
+[routes.ab_test]
+id = "switchyard/ab-test"
+type = "random"
+targets = ["strong", "weak"]
+weights = [3, 7]
+seed = 42
+
+[routes.escalate]
+id = "switchyard/escalate"
+type = "llm_classifier"
+mode = "escalation"
+classifier_target = "judge"
+strong_target = "strong"
+weak_target = "weak"
+prompt = "Judge whether the weak model is stuck. Return the required structured verdict."
+escalation = { confirmations = 2, recent_turn_window = 28, window_message_chars = 500 }
+
 [routes.smart]
-id = "smart"
+id = "switchyard/smart"
 type = "llm_classifier"
 mode = "capability"
 classifier_target = "classifier"
@@ -28,3 +57,21 @@ base_threshold = 0.5
 threshold_step = 0.1
 session_affinity = true
 message_hash_fallback = true
+
+[routes.stage]
+id = "switchyard/stage"
+type = "stage_router"
+capable_target = "strong"
+efficient_target = "weak"
+picker = "efficient_first"
+confidence_threshold = 0.5
+recent_turn_window = 3 
+
+# [routes.gated]
+# id = "switchyard/gated"
+# type = "advisor"
+# executor_target = "executor"
+# advisor_target = "advisor"
+# max_reviews = 3
+# gate_stall_turns = 30
+# gate_min_tool_results = 3
