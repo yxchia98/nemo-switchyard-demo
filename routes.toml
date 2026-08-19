@@ -1,0 +1,30 @@
+schema_version = 1
+
+[llm_clients.openrouter]
+format = "openai_chat"
+base_url = "https://openrouter.ai/api/v1"
+api_key_env = "OPENROUTER_API_KEY"
+
+[targets.classifier]
+id = "nvidia/nemotron-3.5-lightning:free"
+llm_client = "openrouter"
+
+[targets.weak]
+id = "nvidia/nemotron-3.5-lightning:free"
+llm_client = "openrouter"
+
+[targets.strong]
+id = "nvidia/nemotron-3-ultra-550b-a55b:free"
+llm_client = "openrouter"
+
+[routes.smart]
+id = "smart"
+type = "llm_classifier"
+mode = "capability"
+classifier_target = "classifier"
+strong_target = "strong"
+weak_target = "weak"
+base_threshold = 0.5
+threshold_step = 0.1
+session_affinity = true
+message_hash_fallback = true

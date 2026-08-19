@@ -1,0 +1,46 @@
+# ============================================================================
+# passthrough - every request goes to one target. No routing decision.
+#
+# Use it to: pin a stable model alias, or keep a control arm alongside an
+# automatic route so you can compare behaviour without the classifier in the
+# path. Invaluable for troubleshooting - if a passthrough route misbehaves the
+# problem is the upstream, not the router.
+#
+# Overhead: none.
+# ============================================================================
+# Rendered by entrypoint.sh / render.sh via envsubst.
+# format must be one of: openai_chat | openai_responses | anthropic_messages
+# api_key_env names the env var holding the secret - never inline a key here.
+
+schema_version = 1
+
+[llm_clients.openrouter]
+format      = "openai_chat"
+base_url    = "${OPENROUTER_BASE_URL}"
+api_key_env = "OPENROUTER_API_KEY"
+max_retries = 2
+
+[llm_clients.nim]
+format      = "openai_chat"
+base_url    = "${NIM_BASE_URL}"
+api_key_env = "NIM_API_KEY"
+max_retries = 2
+
+[targets.efficient]
+id         = "${OPENROUTER_MODEL}"
+llm_client = "openrouter"
+
+[targets.capable]
+id         = "${NIM_MODEL}"
+llm_client = "nim"
+
+# Two fixed routes, so clients can pin either tier explicitly.
+[routes.efficient-only]
+id     = "switchyard/efficient"
+type   = "passthrough"
+target = "efficient"
+
+[routes.capable-only]
+id     = "switchyard/capable"
+type   = "passthrough"
+target = "capable"

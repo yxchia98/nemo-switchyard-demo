@@ -1,0 +1,67 @@
+# ============================================================================
+# llm_classifier, mode = "escalation"  (the "escalation router")
+#
+# Every turn runs on the weak tier FIRST. A judge reads that answer and decides
+# whether to re-send the same request to the strong tier. Promotion is sticky:
+# once a session latches to strong it does not drop back, so a task will not
+# bounce between models. Contrast with stage_router, which moves bidirectionally.
+#
+# Use it to: start cheap and promote only when a session is demonstrably stuck.
+# Overhead: one judge call per session until it latches, then the judge is
+# skipped entirely.
+#
+# Note the judge is not exposed as a client-selectable model - only the route
+# id is. The optional prompt key replaces the packaged trajectory-judge prompt
+# and uses the escalation verdict schema; Switchyard sends that schema via the
+# provider's structured-output request rather than inlining it in the prompt.
+# ============================================================================
+# Rendered by entrypoint.sh / render.sh via envsubst.
+# format must be one of: openai_chat | openai_responses | anthropic_messages
+# api_key_env names the env var holding the secret - never inline a key here.
+
+schema_version = 1
+
+[llm_clients.openrouter]
+format      = "openai_chat"
+base_url    = "${OPENROUTER_BASE_URL}"
+api_key_env = "OPENROUTER_API_KEY"
+max_retries = 2
+
+[llm_clients.nim]
+format      = "openai_chat"
+base_url    = "${NIM_BASE_URL}"
+api_key_env = "NIM_API_KEY"
+max_retries = 2
+
+# A target is a (llm_client, model id) pair. If the judge uses the same model
+# as another target, it still needs its own client entry to be distinct.
+[llm_clients.openrouter_judge]
+format      = "openai_chat"
+base_url    = "${OPENROUTER_BASE_URL}"
+api_key_env = "OPENROUTER_API_KEY"
+max_retries = 2
+
+[targets.judge]
+id         = "${JUDGE_MODEL}"
+llm_client = "openrouter_judge"
+extra_body = { temperature = 0 }
+
+[targets.weak]
+id         = "${OPENROUTER_MODEL}"
+llm_client = "openrouter"
+
+[targets.strong]
+id         = "${NIM_MODEL}"
+llm_client = "nim"
+
+[routes.agent]
+id                = "switchyard/escalate"
+type              = "llm_classifier"
+mode              = "escalation"
+classifier_target = "judge"
+weak_target       = "weak"
+strong_target     = "strong"
+# confirmations: how many corroborating bad verdicts before promoting.
+# recent_turn_window / window_message_chars bound how much history the judge
+# reads, which controls judge cost on long sessions.
+escalation = { confirmations = ${ESCALATION_CONFIRMATIONS}, recent_turn_window = 28, window_message_chars = 500 }

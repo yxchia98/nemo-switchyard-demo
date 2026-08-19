@@ -1,0 +1,47 @@
+services:
+  switchyard:
+    build:
+      context: .
+      args:
+        SWITCHYARD_VERSION: "0.2"
+    image: switchyard:0.2
+    # Bound to loopback on purpose. Switchyard has no auth, TLS or rate
+    # limiting of its own - put it behind a gateway before wider exposure.
+    ports:
+      - "127.0.0.1:4000:4000"
+    # All runtime config comes from .env - nothing is hardcoded here.
+    # Note: an `environment:` block would take precedence over env_file, so it
+    # is deliberately omitted. Add keys here only to force an override.
+    env_file:
+      - .env
+    depends_on:
+      nim:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # Your self-hosted NIM - the capable tier. Adjust image/model to your
+  # deployment; remove this service entirely if NIM runs elsewhere and just
+  # point NIM_BASE_URL at it.
+  nim:
+    image: nvcr.io/nim/nvidia/nemotron-3-ultra:latest
+    env_file:
+      - .env
+    volumes:
+      - nim-cache:/opt/nim/.cache
+    shm_size: 16gb
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8000/v1/health/ready"]
+      interval: 30s
+      timeout: 5s
+      retries: 20
+      start_period: 600s
+
+volumes:
+  nim-cache:

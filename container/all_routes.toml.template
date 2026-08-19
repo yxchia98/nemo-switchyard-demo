@@ -1,0 +1,97 @@
+# ============================================================================
+# All router types in a single deployment.
+#
+# One TOML file can declare many routes; each route's id is exposed as a
+# separate model on GET /v1/models. That lets a client switch strategy just by
+# changing the model name - ideal for comparing routers on identical traffic.
+#
+# Keeping the two passthrough routes alongside the automatic ones is a
+# troubleshooting technique worth adopting: if switchyard/auto misbehaves,
+# hitting switchyard/capable directly tells you whether the router or the
+# upstream is at fault.
+# ============================================================================
+
+schema_version = 1
+
+[llm_clients.openrouter]
+format      = "openai_chat"
+base_url    = "${OPENROUTER_BASE_URL}"
+api_key_env = "OPENROUTER_API_KEY"
+max_retries = 2
+
+[llm_clients.openrouter_judge]
+format      = "openai_chat"
+base_url    = "${OPENROUTER_BASE_URL}"
+api_key_env = "OPENROUTER_API_KEY"
+max_retries = 2
+
+[llm_clients.nim]
+format      = "openai_chat"
+base_url    = "${NIM_BASE_URL}"
+api_key_env = "NIM_API_KEY"
+max_retries = 2
+
+# --- Targets ----------------------------------------------------------------
+# Named twice per tier because different routers use different vocabulary:
+# stage_router says efficient/capable, llm_classifier says weak/strong.
+
+[targets.efficient]
+id         = "${OPENROUTER_MODEL}"
+llm_client = "openrouter"
+
+[targets.capable]
+id         = "${NIM_MODEL}"
+llm_client = "nim"
+
+[targets.judge]
+id         = "${JUDGE_MODEL}"
+llm_client = "openrouter_judge"
+extra_body = { temperature = 0 }
+
+# --- Control arms: no routing decision --------------------------------------
+
+[routes.efficient-only]
+id     = "switchyard/efficient"
+type   = "passthrough"
+target = "efficient"
+
+[routes.capable-only]
+id     = "switchyard/capable"
+type   = "passthrough"
+target = "capable"
+
+# --- Signal-driven, no judge call (recommended default) ---------------------
+
+[routes.stage]
+id                   = "switchyard/stage"
+type                 = "stage_router"
+efficient_target     = "efficient"
+capable_target       = "capable"
+picker               = "${SWITCHYARD_PICKER}"
+confidence_threshold = ${SWITCHYARD_CONFIDENCE_THRESHOLD}
+recent_window        = ${SWITCHYARD_RECENT_WINDOW}
+
+# --- Judge reads the request up front ---------------------------------------
+
+[routes.auto]
+id                 = "switchyard/auto"
+type               = "llm_classifier"
+mode               = "capability"
+classifier_target  = "judge"
+weak_target        = "efficient"
+strong_target      = "capable"
+base_threshold     = ${CLASSIFIER_BASE_THRESHOLD}
+threshold_step     = ${CLASSIFIER_THRESHOLD_STEP}
+session_affinity   = true
+recent_turn_window = 4
+
+# --- Judge reads the weak answer, then promotes (sticky) --------------------
+
+[routes.escalate]
+id                = "switchyard/escalate"
+type              = "llm_classifier"
+mode              = "escalation"
+classifier_target = "judge"
+weak_target       = "efficient"
+strong_target     = "capable"
+escalation = { confirmations = ${ESCALATION_CONFIRMATIONS}, recent_turn_window = 28, window_message_chars = 500 }

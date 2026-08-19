@@ -1,0 +1,73 @@
+# ============================================================================
+# llm_classifier, mode = "capability"
+#
+# A judge model reads each request and estimates p_solve - the probability the
+# weak tier can handle it. Below base_threshold, the request goes strong.
+# The judge also infers the task domain and applies a threshold_step stricter
+# bar where it is less confident, producing a staircase such as 0.75 for
+# familiar domains / 0.85 / 0.95 for unfamiliar ones. "When in doubt, go
+# strong" is built into the design.
+#
+# Use it to: route on request content, for headless or domain-specific systems.
+# Overhead: one extra judge call per decision (session_affinity amortises it).
+#
+# CALIBRATE base_threshold. It is a required field and upstream deliberately
+# ships no default, because the p_solve distribution depends on your model
+# pairing and task shape. Measure on a sample of real traffic. The 0.75 below
+# is a starting point, not a recommendation.
+# ============================================================================
+# Rendered by entrypoint.sh / render.sh via envsubst.
+# format must be one of: openai_chat | openai_responses | anthropic_messages
+# api_key_env names the env var holding the secret - never inline a key here.
+
+schema_version = 1
+
+[llm_clients.openrouter]
+format      = "openai_chat"
+base_url    = "${OPENROUTER_BASE_URL}"
+api_key_env = "OPENROUTER_API_KEY"
+max_retries = 2
+
+[llm_clients.nim]
+format      = "openai_chat"
+base_url    = "${NIM_BASE_URL}"
+api_key_env = "NIM_API_KEY"
+max_retries = 2
+
+# A target is a (llm_client, model id) pair. If the judge uses the same model
+# as another target, it still needs its own client entry to be distinct.
+[llm_clients.openrouter_judge]
+format      = "openai_chat"
+base_url    = "${OPENROUTER_BASE_URL}"
+api_key_env = "OPENROUTER_API_KEY"
+max_retries = 2
+
+[targets.classifier]
+id         = "${JUDGE_MODEL}"
+llm_client = "openrouter_judge"
+# Keep the judge cheap and deterministic.
+extra_body = { temperature = 0 }
+
+[targets.weak]
+id         = "${OPENROUTER_MODEL}"
+llm_client = "openrouter"
+
+[targets.strong]
+id         = "${NIM_MODEL}"
+llm_client = "nim"
+
+[routes.auto]
+id                = "switchyard/auto"
+type              = "llm_classifier"
+mode              = "capability"
+classifier_target = "classifier"
+weak_target       = "weak"
+strong_target     = "strong"
+# Required. No default exists upstream - calibrate this yourself.
+base_threshold    = ${CLASSIFIER_BASE_THRESHOLD}
+# Stricter increment applied to lower-confidence domains.
+threshold_step    = ${CLASSIFIER_THRESHOLD_STEP}
+# Reuse the first decision across a session instead of reclassifying every
+# turn - avoids repeat judge calls on work that has not materially changed.
+session_affinity  = true
+recent_turn_window = 4

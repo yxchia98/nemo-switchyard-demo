@@ -1,0 +1,67 @@
+# ============================================================================
+# stage_router - the default recommendation for coding agents.
+#
+# Reads signals already in the conversation - tool results, errors, progress -
+# to pick a tier, with no judge call on the default path. Severe errors,
+# repeated unproductive work or long exploration push toward capable; steady
+# writes and edits, especially once tests pass, favour efficient. A single
+# signal is usually not decisive: corroborating signals must cross
+# confidence_threshold. Inconclusive turns fall back to the picker default.
+#
+# Unlike escalation mode this is BIDIRECTIONAL - a session can move back down
+# to the efficient tier later in the same task.
+#
+# Use it to: route long multi-step agent tasks cheaply.
+# Overhead: near zero - it reuses signals the system already has.
+# ============================================================================
+# Rendered from environment variables by entrypoint.sh (envsubst).
+#
+# Tiering:
+#   efficient -> OpenRouter free Nemotron 3.5 Lightning  (low-capability turns)
+#   capable   -> self-hosted NVIDIA NIM                  (high-capability turns)
+
+schema_version = 1
+
+# --- Clients: where to send traffic and in what wire format ------------------
+# format must be one of: openai_chat | openai_responses | anthropic_messages
+# api_key_env names the env var holding the secret. Never inline the key here.
+
+[llm_clients.openrouter]
+format      = "openai_chat"
+base_url    = "${OPENROUTER_BASE_URL}"
+api_key_env = "OPENROUTER_API_KEY"
+max_retries = 2
+
+[llm_clients.nim]
+format      = "openai_chat"
+base_url    = "${NIM_BASE_URL}"
+api_key_env = "NIM_API_KEY"
+max_retries = 2
+
+# --- Targets: the actual models. `id` is the model name sent upstream. -------
+
+[targets.efficient]
+id         = "${OPENROUTER_MODEL}"
+llm_client = "openrouter"
+
+[targets.capable]
+id         = "${NIM_MODEL}"
+llm_client = "nim"
+
+# --- Route: the model name your agent asks for ------------------------------
+# type = "stage_router" reads tool results, errors and progress signals from
+# the conversation to pick a tier, with no extra judge-model call on the
+# default path.
+#
+# picker = "efficient_first" optimises for cost: turns start on the efficient
+# tier and only move to capable once corroborating signals cross the
+# confidence threshold. Use "capable_first" if quality matters more than spend.
+
+[routes.stage]
+id                   = "${SWITCHYARD_ROUTE_ID}"
+type                 = "stage_router"
+efficient_target     = "efficient"
+capable_target       = "capable"
+picker               = "${SWITCHYARD_PICKER}"
+confidence_threshold = ${SWITCHYARD_CONFIDENCE_THRESHOLD}
+recent_window        = ${SWITCHYARD_RECENT_WINDOW}

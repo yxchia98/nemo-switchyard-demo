@@ -1,0 +1,51 @@
+# ============================================================================
+# random - fixed traffic split across targets. Does not inspect the prompt.
+#
+# Use it to: establish a cost/quality baseline before switching to a smarter
+# router, or run an A/B test between two models.
+#
+# Overhead: none.
+#
+# !! UNVERIFIED SYNTAX !!
+# Docs state random "selects among targets using optional relative weights",
+# but no official weighted example was available at time of writing. The
+# weights block below is a best guess. Validate before use:
+#     switchyard-server --config rendered.toml --dry-run
+# If it is rejected, the error message names the expected shape (upstream is
+# good about this). Removing the weights entirely gives a uniform split, which
+# is the safer starting point.
+# ============================================================================
+# Rendered by entrypoint.sh / render.sh via envsubst.
+# format must be one of: openai_chat | openai_responses | anthropic_messages
+# api_key_env names the env var holding the secret - never inline a key here.
+
+schema_version = 1
+
+[llm_clients.openrouter]
+format      = "openai_chat"
+base_url    = "${OPENROUTER_BASE_URL}"
+api_key_env = "OPENROUTER_API_KEY"
+max_retries = 2
+
+[llm_clients.nim]
+format      = "openai_chat"
+base_url    = "${NIM_BASE_URL}"
+api_key_env = "NIM_API_KEY"
+max_retries = 2
+
+[targets.efficient]
+id         = "${OPENROUTER_MODEL}"
+llm_client = "openrouter"
+
+[targets.capable]
+id         = "${NIM_MODEL}"
+llm_client = "nim"
+
+[routes.ab-test]
+id      = "switchyard/random"
+type    = "random"
+targets = ["efficient", "capable"]
+# Relative, not percentages: 9:1 sends ~90% to the efficient tier.
+weights = [9, 1]
+# Optional: fixes the process-local selection sequence for reproducible runs.
+# seed  = 42
