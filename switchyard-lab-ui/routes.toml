@@ -1,0 +1,68 @@
+# routes.toml - deployment used by the Switchyard Lab Console.
+#
+# Validate before serving:
+#   switchyard-server --config routes.toml --dry-run
+# Then run:
+#   export OPENROUTER_API_KEY="your-openrouter-key"
+#   switchyard-server --config routes.toml --host 127.0.0.1 --port 4000
+
+schema_version = 1
+
+[llm_clients.openrouter]
+format = "openai_chat"
+base_url = "https://openrouter.ai/api/v1"
+api_key_env = "OPENROUTER_API_KEY"
+
+[targets.classifier]
+id = "nvidia/nemotron-3.5-lightning:free"
+llm_client = "openrouter"
+
+[targets.judge]
+id = "nvidia/nemotron-3.5-lightning:free"
+llm_client = "openrouter"
+
+[targets.weak]
+id = "nvidia/nemotron-3.5-lightning:free"
+llm_client = "openrouter"
+
+[targets.strong]
+id = "nvidia/nemotron-3-ultra-550b-a55b:free"
+llm_client = "openrouter"
+
+[routes.ab_test]
+id = "switchyard/ab-test"
+type = "random"
+targets = ["strong", "weak"]
+weights = [3, 7]
+seed = 42
+
+[routes.escalate]
+id = "switchyard/escalate"
+type = "llm_classifier"
+mode = "escalation"
+classifier_target = "judge"
+strong_target = "strong"
+weak_target = "weak"
+prompt = "Judge whether the weak model is stuck. Return the required structured verdict."
+escalation = { confirmations = 2, recent_turn_window = 28, window_message_chars = 500 }
+
+[routes.smart]
+id = "switchyard/smart"
+type = "llm_classifier"
+mode = "capability"
+classifier_target = "classifier"
+strong_target = "strong"
+weak_target = "weak"
+base_threshold = 0.5
+threshold_step = 0.1
+session_affinity = true
+message_hash_fallback = true
+
+[routes.stage]
+id = "switchyard/stage"
+type = "stage_router"
+capable_target = "strong"
+efficient_target = "weak"
+picker = "efficient_first"
+confidence_threshold = 0.5
+recent_turn_window = 3
