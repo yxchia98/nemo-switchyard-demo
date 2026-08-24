@@ -36,13 +36,15 @@ export function useSwitchyardChat() {
       prompt: string;
       images: ImageAttachment[];
       routeId: string;
+      providerSessionEnabled: boolean;
+      sessionId: string;
       systemPrompt: string;
       temperature: number;
       /** Send prior turns so stage/escalation routes have a window to read. */
       includeHistory: boolean;
       history: Turn[];
     }) => {
-      const { prompt, images, routeId, systemPrompt, temperature, includeHistory, history } = opts;
+      const { prompt, images, routeId, providerSessionEnabled, sessionId, systemPrompt, temperature, includeHistory, history } = opts;
       const id = nextId();
 
       setTurns((prev) => [
@@ -50,6 +52,7 @@ export function useSwitchyardChat() {
         {
           id,
           routeId,
+          sessionId: providerSessionEnabled ? sessionId || null : null,
           prompt,
           images,
           answer: "",
@@ -109,6 +112,7 @@ export function useSwitchyardChat() {
             model: routeId,
             messages,
             temperature,
+            ...(providerSessionEnabled && sessionId.trim() ? { sessionId: sessionId.trim() } : {}),
           }),
           signal: controller.signal,
         });

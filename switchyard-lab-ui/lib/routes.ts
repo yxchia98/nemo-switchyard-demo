@@ -35,18 +35,18 @@ export const ROUTES: RouteDef[] = [
     kind: "llm_classifier",
     accent: "#76b900",
     summary:
-      "A classifier model scores each request and picks strong or weak. This client sends no session identifier.",
+      "A classifier model scores each request and picks strong or weak. The optional provider-session toggle controls whether a stable session identifier is sent.",
     config: [
       { key: "classifier_target", value: "classifier", note: "Model that scores the request" },
       { key: "base_threshold", value: "0.5", note: "Score above this escalates to strong" },
       { key: "threshold_step", value: "0.1", note: "Threshold drift per turn" },
-      { key: "session_affinity", value: "true", note: "Configured in TOML, but this client sends no session identifier" },
-      { key: "message_hash_fallback", value: "true", note: "Used because this client sends no session identifier" },
+      { key: "session_affinity", value: "true", note: "Used when the provider-session toggle is enabled" },
+      { key: "message_hash_fallback", value: "true", note: "Used when the provider-session toggle is disabled" },
     ],
     tryThis: [
       "Send 'hi' and then 'derive the closed form of the Fibonacci recurrence' - watch the tier change.",
-      "Resend the exact hard prompt: message_hash_fallback should make the behavior reproducible.",
-      "Change one phrase and compare the score and selected tier.",
+      "With provider session off, resend the exact prompt to demonstrate message_hash_fallback.",
+      "Enable provider session for OpenRouter, keep the id fixed, and compare affinity behavior.",
     ],
   },
   {
@@ -85,7 +85,7 @@ export const ROUTES: RouteDef[] = [
     ],
     tryThis: [
       "Push the same unsolved problem across multiple turns - promotion needs 2 confirmations.",
-      "After promotion, send an easy prompt and inspect whether your Switchyard build retains the decision without a client session id.",
+      "After promotion, send an easy prompt and inspect whether your Switchyard build retains the decision with provider session disabled.",
     ],
   },
   {

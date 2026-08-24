@@ -4,6 +4,7 @@ import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "rea
 import { BrandLockup } from "@/components/BrandLockup";
 import { DecisionPanel } from "@/components/DecisionPanel";
 import { ImageAttachments, MAX_IMAGES, filesToAttachments } from "@/components/ImageAttachments";
+import { MarkdownAnswer } from "@/components/MarkdownAnswer";
 import { RoutePicker } from "@/components/RoutePicker";
 import { RouteTally } from "@/components/RouteTally";
 import { StatusBar, type HealthState } from "@/components/StatusBar";
@@ -11,9 +12,12 @@ import { DEFAULT_ROUTE_ID, findRoute } from "@/lib/routes";
 import { useSwitchyardChat } from "@/lib/useSwitchyardChat";
 import type { ImageAttachment } from "@/lib/types";
 
+const newSessionId = () => `aiih-${Math.random().toString(36).slice(2, 8)}`;
 
 export default function Page() {
   const [routeId, setRouteId] = useState(DEFAULT_ROUTE_ID);
+  const [providerSessionEnabled, setProviderSessionEnabled] = useState(false);
+  const [sessionId, setSessionId] = useState("");
   const [systemPrompt, setSystemPrompt] = useState("");
   const [temperature, setTemperature] = useState(0.7);
   const [includeHistory, setIncludeHistory] = useState(true);
@@ -31,6 +35,8 @@ export default function Page() {
   const { turns, busy, send, stop, reset } = useSwitchyardChat();
   const scrollRef = useRef<HTMLDivElement>(null);
   const route = useMemo(() => findRoute(routeId), [routeId]);
+
+  useEffect(() => setSessionId(newSessionId()), []);
 
   const probe = useCallback(async () => {
     setChecking(true);
@@ -86,6 +92,8 @@ export default function Page() {
       prompt: text,
       images: submittedImages,
       routeId,
+      providerSessionEnabled,
+      sessionId,
       systemPrompt,
       temperature,
       includeHistory,
@@ -93,7 +101,7 @@ export default function Page() {
       // replay history recorded on the same route.
       history: turns.filter((t) => t.routeId === routeId),
     });
-  }, [prompt, images, busy, send, routeId, systemPrompt, temperature, includeHistory, turns]);
+  }, [prompt, images, busy, send, routeId, providerSessionEnabled, sessionId, systemPrompt, temperature, includeHistory, turns]);
 
   const loadStats = useCallback(async () => {
     setServerStats("loading...");
@@ -136,6 +144,38 @@ export default function Page() {
             registeredIds={registeredIds}
             modelsLoaded={modelsLoaded}
           />
+
+          <p className="section-title">Provider session</p>
+          <div className="card session-control">
+            <label className="checkbox">
+              <input
+                type="checkbox"
+                checked={providerSessionEnabled}
+                onChange={(event) => setProviderSessionEnabled(event.target.checked)}
+              />
+              Enable OpenRouter session fields
+            </label>
+            <div className="hint">
+              Off by default. When enabled, the proxy sends <code>user</code>, <code>session_id</code>,
+              <code>x-switchyard-session-id</code>, and <code>x-session-id</code>.
+            </div>
+            {providerSessionEnabled && (
+              <div className="field session-id-field">
+                <label htmlFor="session">Session id</label>
+                <div className="row">
+                  <input
+                    id="session"
+                    value={sessionId}
+                    onChange={(event) => setSessionId(event.target.value)}
+                    placeholder="Enter a stable session id"
+                  />
+                  <button className="btn" onClick={() => setSessionId(newSessionId())} type="button">
+                    New
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
 
           <p className="section-title">Request</p>
           <div className="field">
@@ -226,7 +266,9 @@ export default function Page() {
                 {t.error ? (
                   <div className="answer err">{t.error}</div>
                 ) : (
-                  <div className={`answer${t.streaming ? " cursor" : ""}`}>{t.answer}</div>
+                  <div className={`answer${t.streaming ? " cursor" : ""}`}>
+                    <MarkdownAnswer>{t.answer}</MarkdownAnswer>
+                  </div>
                 )}
               </div>
             ))}

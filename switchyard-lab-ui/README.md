@@ -114,6 +114,20 @@ the footer line in `app/page.tsx`.
 
 ---
 
+## Markdown replies
+
+Assistant responses render as safe GitHub-flavored Markdown while tokens stream. Supported
+syntax includes headings, emphasis, links, ordered and unordered lists, task lists,
+blockquotes, horizontal rules, inline code, fenced code blocks, tables, and Markdown
+images. External links open in a new tab with `noopener noreferrer`.
+
+Rendering uses `react-markdown` with `remark-gfm`. Raw HTML is intentionally not enabled,
+so model output is parsed into React elements rather than injected with
+`dangerouslySetInnerHTML`. This prevents an LLM response from executing scripts or event
+handlers in an attendee's browser.
+
+---
+
 ## Image reasoning
 
 The composer accepts image input three ways: click **Add image**, drag files onto the
@@ -151,7 +165,7 @@ local name. All four ids are registered on `GET /v1/models`.
 
 | Route id | Type | What it demonstrates |
 | --- | --- | --- |
-| `switchyard/smart` | `llm_classifier` / capability | A classifier scores the request against `base_threshold = 0.5`; this client sends no session identifier |
+| `switchyard/smart` | `llm_classifier` / capability | A classifier scores the request against `base_threshold = 0.5`; optional session identity demonstrates affinity |
 | `switchyard/stage` | `stage_router` | Reads conversation signals over a 3-turn window instead of paying for a classifier call; `efficient_first` |
 | `switchyard/escalate` | `llm_classifier` / escalation | Starts weak; a judge promotes the session after `confirmations = 2`, and promotion is sticky |
 | `switchyard/ab-test` | `random` | Content-blind 3:7 strong:weak split from `seed = 42` — the baseline the others are judged against |
@@ -172,15 +186,15 @@ Targets: `strong` = `nvidia/nemotron-3-ultra-550b-a55b:free`, and `weak`, `class
    Content is irrelevant here — that is the point.
 2. **Introduce content awareness.** Switch to `switchyard/smart`. Send `hi`, then
    `derive the closed form of the Fibonacci recurrence`. The tier badge should move.
-3. **Show hash fallback.** Resend the exact same hard prompt, then change one phrase.
-   Because the client sends no session identifier, `message_hash_fallback` determines
-   repeatability rather than a provider-specific session field.
+3. **Compare identity modes.** Leave *Enable OpenRouter session fields* off and resend
+   the same hard prompt to demonstrate `message_hash_fallback`. Then enable it, retain the
+   generated session id, and compare session-affinity behavior.
 4. **Show signal-driven routing.** On `switchyard/stage`, paste three turns of failing
    test output. Watch it climb to the capable tier, then send a trivial follow-up and
    watch the 3-turn window let it fall back.
-5. **Show escalation.** On `switchyard/escalate`, push an unsolved problem across
-   multiple history-bearing turns. Promotion needs two confirmations; inspect whether
-   your Switchyard build retains it without a client session identifier.
+5. **Show escalation.** On `switchyard/escalate`, enable provider session when using
+   OpenRouter and push an unsolved problem across multiple turns. Promotion needs two
+   confirmations; afterwards test whether an easy prompt remains on strong.
 6. **Reconcile with the server.** Click *Fetch /v1/stats* and compare the router's own
    record against the client-side tally.
 
@@ -207,10 +221,13 @@ candidate names rather than hardcoding one spelling. If no routing headers are p
 the tier is inferred from the resolved model id in the stream and the decision panel says
 so explicitly instead of silently guessing.
 
-The client deliberately sends no session identity: no `session_id`, `user`, or session
-headers are added by the browser or proxy. This keeps the request provider-neutral.
-Router behavior that requires a stable client session should be considered unavailable;
-`message_hash_fallback` remains available for the smart route.
+Provider session identity is **opt-in and off by default**. With the toggle off, the
+browser omits `sessionId` from its proxy request and the proxy adds no `session_id`,
+`user`, or session headers, keeping the upstream request provider-neutral. When *Enable
+OpenRouter session fields* is on and the session id is non-empty, the proxy adds `user`
+and `session_id` to the body plus `x-switchyard-session-id` and `x-session-id` headers.
+The per-turn decision panel displays the active provider session id so attendees can see
+which mode produced the routing decision.
 
 ---
 
@@ -228,6 +245,7 @@ components/
   BrandLockup.tsx       Dell Technologies APJ AI Innovation Hub lockup (+ optional official logo)
   DecisionPanel.tsx     Per-turn: tier badge, model, rationale, latency, tokens, raw headers
   ImageAttachments.tsx  File picker, paste/drop processing, validation and removable previews
+  MarkdownAnswer.tsx    Safe GFM renderer for streaming assistant responses
   RoutePicker.tsx       The four routes; flags any not listed on /v1/models
   RouteTally.tsx        Strong/weak split, avg latency and tokens per route
   StatusBar.tsx         Health + route discovery indicators
@@ -249,6 +267,7 @@ lib/
 | Token counts blank | Build ignores `stream_options` | Expected; latency and tier still work. Use `/v1/stats` for authoritative usage |
 | Image request rejected | Selected target does not accept image input | Configure vision-capable `strong` and `weak` targets; confirm OpenRouter modality support |
 | Image will not attach | Unsupported format, over 5 MB, or already four attached | Use PNG/JPEG/WebP/GIF and reduce file size/count |
+| Provider rejects `session_id` | Session toggle enabled for a provider without session support | Turn off *Enable OpenRouter session fields*; the next request omits all session parameters |
 | Tier always "unknown" | No routing headers and an unrecognized model id | Add the model id to `TARGET_MODELS` in `lib/routes.ts` |
 
 Switchyard is pre-alpha and explicitly not for production; this console is Dell APJ AI

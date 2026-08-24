@@ -382,3 +382,70 @@ details.raw pre {
   .composer-actions { flex-wrap: wrap; }
   .turn-images img { height: 96px; max-width: 160px; }
 }
+
+/* --- Optional provider session ----------------------------------------- */
+.session-control { margin-bottom: 4px; }
+.session-control .hint {
+  margin-top: 7px; color: var(--muted); font-size: 11px; line-height: 1.5;
+}
+.session-control .hint code {
+  background: var(--dell-blue-tint); border: 1px solid var(--dell-blue-tint-2);
+  border-radius: 4px; padding: 0 4px; color: var(--dell-blue-dark); font-size: 10.5px;
+}
+.session-id-field { margin: 11px 0 0; padding-top: 10px; border-top: 1px solid var(--line); }
+
+/* --- Markdown model replies -------------------------------------------- */
+.markdown-body { white-space: normal; line-height: 1.65; min-width: 0; }
+.markdown-body > :first-child { margin-top: 0; }
+.markdown-body > :last-child { margin-bottom: 0; }
+.markdown-body h1,
+.markdown-body h2,
+.markdown-body h3,
+.markdown-body h4 {
+  color: var(--text); line-height: 1.25; margin: 1.35em 0 0.55em; font-weight: 700;
+}
+.markdown-body h1 { font-size: 1.55rem; padding-bottom: 0.3em; border-bottom: 1px solid var(--line); }
+.markdown-body h2 { font-size: 1.3rem; padding-bottom: 0.25em; border-bottom: 1px solid var(--line); }
+.markdown-body h3 { font-size: 1.12rem; }
+.markdown-body h4 { font-size: 1rem; }
+.markdown-body p { margin: 0.75em 0; }
+.markdown-body ul,
+.markdown-body ol { margin: 0.7em 0; padding-left: 1.65em; }
+.markdown-body li + li { margin-top: 0.3em; }
+.markdown-body li > p { margin: 0.35em 0; }
+.markdown-body a { color: var(--dell-blue-dark); text-decoration: underline; text-underline-offset: 2px; }
+.markdown-body a:hover { color: var(--dell-blue); }
+.markdown-body strong { color: var(--text); font-weight: 700; }
+.markdown-body blockquote {
+  margin: 0.9em 0; padding: 0.25em 0 0.25em 1em;
+  border-left: 3px solid var(--dell-blue); color: var(--muted);
+}
+.markdown-body hr { border: 0; border-top: 1px solid var(--line); margin: 1.25em 0; }
+.markdown-body code {
+  font-family: var(--mono); font-size: 0.88em; color: var(--dell-blue-ink);
+  background: var(--dell-blue-tint); border: 1px solid var(--dell-blue-tint-2);
+  border-radius: 4px; padding: 0.12em 0.35em;
+}
+.markdown-body pre {
+  margin: 0.9em 0; padding: 13px 15px; overflow-x: auto;
+  background: var(--dell-blue-ink); color: #edf6fc;
+  border: 1px solid var(--dell-blue-deep); border-radius: var(--radius-sm);
+  white-space: pre; tab-size: 2;
+}
+.markdown-body pre code {
+  display: block; padding: 0; border: 0; border-radius: 0;
+  background: transparent; color: inherit; font-size: 12px; line-height: 1.6;
+}
+.markdown-body table {
+  display: block; width: max-content; max-width: 100%; overflow-x: auto;
+  border-collapse: collapse; margin: 0.9em 0; font-size: 12.5px;
+}
+.markdown-body th,
+.markdown-body td { border: 1px solid var(--line-strong); padding: 7px 10px; text-align: left; }
+.markdown-body th { background: var(--dell-blue-tint); color: var(--dell-blue-ink); font-weight: 700; }
+.markdown-body tr:nth-child(even) td { background: var(--panel-2); }
+.markdown-body img {
+  display: block; max-width: 100%; height: auto; margin: 0.9em 0;
+  border: 1px solid var(--line); border-radius: var(--radius-sm);
+}
+.markdown-body input[type="checkbox"] { width: auto; margin-right: 0.45em; accent-color: var(--dell-blue); }

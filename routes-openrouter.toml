@@ -13,7 +13,7 @@ api_key_env = "NVIDIA_API_KEY"
 [targets.classifier]
 id = "nvidia/nemotron-3.5-lightning:free"
 llm_client = "openrouter"
-extra_body = { chat_template_kwargs = { enable_thinking = true }, "reasoning_budget" = "2048" }
+extra_body = { reasoning = { enabled = false } }
 
 [targets.weak]
 id = "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free"

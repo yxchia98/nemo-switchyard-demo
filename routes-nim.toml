@@ -13,15 +13,16 @@ api_key_env = "NVIDIA_API_KEY"
 [targets.classifier]
 id = "nvidia/nemotron-3.5-lightning-30b-a3b"
 llm_client = "nim"
-extra_body = { chat_template_kwargs = { enable_thinking = true }, "reasoning_budget" = "2048" }
+extra_body = { "chat_template_kwargs" = { "enable_thinking" = "false" }, "reasoning_budget" = "1024" }
 
 [targets.weak]
 id = "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning"
 llm_client = "nim"
 
 [targets.strong]
-id = "nvidia/nemotron-3-ultra-550b-a55b"
+id = "meta/muse-glimmer-30b"
 llm_client = "nim"
+extra_body = { "reasoning_effort" = "low" }
 
 [routes.ab_test]
 id = "switchyard/ab-test"
