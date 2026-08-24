@@ -2,7 +2,7 @@
 
 import { useCallback, useRef, useState } from "react";
 import { tierForModel } from "./routes";
-import type { ChatMessage, DecisionEvent, Turn, Usage } from "./types";
+import type { ChatContentPart, ChatMessage, DecisionEvent, ImageAttachment, Turn, Usage } from "./types";
 
 let seq = 0;
 const nextId = () => `turn-${Date.now()}-${seq++}`;
@@ -34,6 +34,7 @@ export function useSwitchyardChat() {
   const send = useCallback(
     async (opts: {
       prompt: string;
+      images: ImageAttachment[];
       routeId: string;
       sessionId: string;
       systemPrompt: string;
@@ -42,7 +43,7 @@ export function useSwitchyardChat() {
       includeHistory: boolean;
       history: Turn[];
     }) => {
-      const { prompt, routeId, sessionId, systemPrompt, temperature, includeHistory, history } = opts;
+      const { prompt, images, routeId, sessionId, systemPrompt, temperature, includeHistory, history } = opts;
       const id = nextId();
 
       setTurns((prev) => [
@@ -52,6 +53,7 @@ export function useSwitchyardChat() {
           routeId,
           sessionId: sessionId || null,
           prompt,
+          images,
           answer: "",
           decision: null,
           usage: null,
@@ -69,13 +71,34 @@ export function useSwitchyardChat() {
       const messages: ChatMessage[] = [];
       if (systemPrompt.trim()) messages.push({ role: "system", content: systemPrompt.trim() });
       if (includeHistory) {
+        // Avoid repeatedly inflating the request with every prior base64 image.
+        // If this turn has no new image, replay only the most recent image turn
+        // so follow-up questions such as "what is in the upper-left?" still work.
+        const lastImageTurnId = images.length
+          ? null
+          : [...history].reverse().find((turn) => turn.images.length > 0)?.id ?? null;
         for (const t of history) {
           if (t.error) continue;
-          messages.push({ role: "user", content: t.prompt });
+          const replayImages = t.id === lastImageTurnId ? t.images : [];
+          const priorContent: ChatContentPart[] = [{
+            type: "text",
+            text: t.prompt || "Describe and reason about the attached image.",
+          }];
+          for (const image of replayImages) {
+            priorContent.push({ type: "image_url", image_url: { url: image.dataUrl, detail: "auto" } });
+          }
+          messages.push({ role: "user", content: replayImages.length ? priorContent : t.prompt });
           if (t.answer) messages.push({ role: "assistant", content: t.answer });
         }
       }
-      messages.push({ role: "user", content: prompt });
+      const currentContent: ChatContentPart[] = [{
+        type: "text",
+        text: prompt || "Describe and reason about the attached image.",
+      }];
+      for (const image of images) {
+        currentContent.push({ type: "image_url", image_url: { url: image.dataUrl, detail: "auto" } });
+      }
+      messages.push({ role: "user", content: images.length ? currentContent : prompt });
 
       const controller = new AbortController();
       abortRef.current = controller;

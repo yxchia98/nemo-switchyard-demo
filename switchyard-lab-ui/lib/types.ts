@@ -1,6 +1,18 @@
+export interface ImageAttachment {
+  id: string;
+  name: string;
+  mimeType: string;
+  size: number;
+  dataUrl: string;
+}
+
+export type ChatContentPart =
+  | { type: "text"; text: string }
+  | { type: "image_url"; image_url: { url: string; detail?: "auto" | "low" | "high" } };
+
 export interface ChatMessage {
   role: "user" | "assistant" | "system";
-  content: string;
+  content: string | ChatContentPart[];
 }
 
 export interface DecisionEvent {
@@ -28,6 +40,7 @@ export interface Turn {
   routeId: string;
   sessionId: string | null;
   prompt: string;
+  images: ImageAttachment[];
   answer: string;
   decision: DecisionEvent | null;
   usage: Usage | null;

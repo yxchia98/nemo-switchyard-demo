@@ -1,14 +1,17 @@
 "use client";
 
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { BrandLockup } from "@/components/BrandLockup";
 import { DecisionPanel } from "@/components/DecisionPanel";
+import { ImageAttachments, MAX_IMAGES, filesToAttachments } from "@/components/ImageAttachments";
 import { RoutePicker } from "@/components/RoutePicker";
 import { RouteTally } from "@/components/RouteTally";
 import { StatusBar, type HealthState } from "@/components/StatusBar";
 import { DEFAULT_ROUTE_ID, findRoute } from "@/lib/routes";
 import { useSwitchyardChat } from "@/lib/useSwitchyardChat";
+import type { ImageAttachment } from "@/lib/types";
 
-const newSessionId = () => `lab-${Math.random().toString(36).slice(2, 8)}`;
+const newSessionId = () => `aiih-${Math.random().toString(36).slice(2, 8)}`;
 
 export default function Page() {
   const [routeId, setRouteId] = useState(DEFAULT_ROUTE_ID);
@@ -17,6 +20,9 @@ export default function Page() {
   const [temperature, setTemperature] = useState(0.7);
   const [includeHistory, setIncludeHistory] = useState(true);
   const [prompt, setPrompt] = useState("");
+  const [images, setImages] = useState<ImageAttachment[]>([]);
+  const [imageError, setImageError] = useState<string | null>(null);
+  const [draggingImage, setDraggingImage] = useState(false);
 
   const [health, setHealth] = useState<HealthState | null>(null);
   const [registeredIds, setRegisteredIds] = useState<string[]>([]);
@@ -57,12 +63,34 @@ export default function Page() {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [turns]);
 
+  const addImages = useCallback(async (files: File[]) => {
+    setImageError(null);
+    try {
+      const added = await filesToAttachments(files);
+      if (!added.length) {
+        setImageError("No supported image was found. Use PNG, JPEG, WebP, or GIF.");
+        return;
+      }
+      setImages((current) => {
+        const slots = MAX_IMAGES - current.length;
+        if (added.length > slots) setImageError(`A maximum of ${MAX_IMAGES} images can be attached.`);
+        return [...current, ...added.slice(0, Math.max(0, slots))];
+      });
+    } catch (error) {
+      setImageError(error instanceof Error ? error.message : String(error));
+    }
+  }, []);
+
   const submit = useCallback(() => {
     const text = prompt.trim();
-    if (!text || busy) return;
+    if ((!text && images.length === 0) || busy) return;
+    const submittedImages = images;
     setPrompt("");
+    setImages([]);
+    setImageError(null);
     void send({
       prompt: text,
+      images: submittedImages,
       routeId,
       sessionId,
       systemPrompt,
@@ -72,7 +100,7 @@ export default function Page() {
       // replay history recorded on the same route.
       history: turns.filter((t) => t.routeId === routeId),
     });
-  }, [prompt, busy, send, routeId, sessionId, systemPrompt, temperature, includeHistory, turns]);
+  }, [prompt, images, busy, send, routeId, sessionId, systemPrompt, temperature, includeHistory, turns]);
 
   const loadStats = useCallback(async () => {
     setServerStats("loading...");
@@ -91,19 +119,20 @@ export default function Page() {
 
   return (
     <div className="app">
-      <header className="topbar">
-        <div className="brand">
-          <h1>NeMo Switchyard - Lab Console</h1>
-          <span>routing observability</span>
-        </div>
-        <div className="spacer" />
+      <header className="brandbar">
+        <BrandLockup />
+        <span className="spacer" />
+        <span className="session-tag">Lab session - NVIDIA NeMo Switchyard</span>
+      </header>
+
+      <div className="statusbar">
         <StatusBar
           health={health}
           registeredIds={registeredIds}
           checking={checking}
           onRefresh={probe}
         />
-      </header>
+      </div>
 
       <div className="layout">
         <aside className="rail-left">
@@ -169,12 +198,18 @@ export default function Page() {
           <div className="hint" style={{ marginTop: 4 }}>
             Required for the stage router&apos;s 3-turn window and the judge&apos;s 28-turn window.
           </div>
+
+          <p className="hub-footer">
+            Dell Technologies APJ AI Innovation Hub - hands-on lab environment. For enablement use
+            only; NVIDIA NeMo Switchyard is pre-alpha software and not intended for production.
+          </p>
         </aside>
 
         <main className="center">
           <div className="transcript" ref={scrollRef}>
             {turns.length === 0 && (
               <div className="empty">
+                <div className="eyebrow">Dell Technologies APJ AI Innovation Hub</div>
                 <h2>Watch the router decide</h2>
                 <p>
                   Every turn goes to one route id and comes back with a decision panel: which target
@@ -189,10 +224,11 @@ export default function Page() {
                   <li>
                     Send <code>hi</code>, then something hard. Compare the tier badges.
                   </li>
+                  <li>Paste or upload an image and ask what the model sees. Confirm the selected target supports vision.</li>
                   <li>Switch to <code>switchyard/ab-test</code> and send the same prompt 10 times.</li>
                 </ol>
                 {health && !health.ok && (
-                  <p style={{ color: "var(--danger)" }}>
+                  <p style={{ color: "var(--danger)", fontWeight: 600 }}>
                     Router unreachable at {health.baseUrl ?? "the configured base URL"}. {health.error}
                   </p>
                 )}
@@ -202,8 +238,16 @@ export default function Page() {
             {turns.map((t) => (
               <div className="turn" key={t.id}>
                 <div className="bubble-user">
-                  <div className="who">you - {t.routeId}</div>
-                  {t.prompt}
+                  <div className="who">Attendee prompt - {t.routeId}</div>
+                  {t.prompt || <span className="image-only-label">Image reasoning request</span>}
+                  {t.images.length > 0 && (
+                    <div className="turn-images">
+                      {t.images.map((image) => (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img key={image.id} src={image.dataUrl} alt={image.name} title={image.name} />
+                      ))}
+                    </div>
+                  )}
                 </div>
                 <DecisionPanel turn={t} />
                 {t.error ? (
@@ -215,21 +259,58 @@ export default function Page() {
             ))}
           </div>
 
-          <div className="composer">
+          <div
+            className={`composer${draggingImage ? " is-dragging" : ""}`}
+            onDragEnter={(event) => {
+              if (Array.from(event.dataTransfer.items).some((item) => item.type.startsWith("image/"))) {
+                event.preventDefault();
+                setDraggingImage(true);
+              }
+            }}
+            onDragOver={(event) => {
+              if (Array.from(event.dataTransfer.types).includes("Files")) event.preventDefault();
+            }}
+            onDragLeave={(event) => {
+              if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setDraggingImage(false);
+            }}
+            onDrop={(event) => {
+              event.preventDefault();
+              setDraggingImage(false);
+              void addImages(Array.from(event.dataTransfer.files));
+            }}
+          >
             <div className="composer-inner">
+              {draggingImage && <div className="drop-callout">Drop image to attach</div>}
               <textarea
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
+                onPaste={(event) => {
+                  const pasted = Array.from(event.clipboardData.items)
+                    .filter((item) => item.type.startsWith("image/"))
+                    .map((item) => item.getAsFile())
+                    .filter((file): file is File => Boolean(file));
+                  if (pasted.length) {
+                    event.preventDefault();
+                    void addImages(pasted);
+                  }
+                }}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
                     e.preventDefault();
                     submit();
                   }
                 }}
-                placeholder={`Send to ${routeId}...  (Cmd/Ctrl + Enter)`}
+                placeholder={`Ask about an image or send text to ${routeId}...  (Cmd/Ctrl + Enter)`}
+              />
+              <ImageAttachments
+                images={images}
+                disabled={busy}
+                error={imageError}
+                onFiles={(files) => void addImages(files)}
+                onRemove={(id) => setImages((current) => current.filter((image) => image.id !== id))}
               />
               <div className="composer-actions">
-                <button className="btn primary" onClick={submit} disabled={busy || !prompt.trim()} type="button">
+                <button className="btn primary" onClick={submit} disabled={busy || (!prompt.trim() && images.length === 0)} type="button">
                   {busy ? "Routing..." : "Send"}
                 </button>
                 {busy && (
@@ -255,7 +336,7 @@ export default function Page() {
             <>
               <p className="section-title">{route.label}</p>
               <div className="card">
-                <div style={{ fontSize: 12.5, color: "#c4d0dc", marginBottom: 10 }}>{route.summary}</div>
+                <div style={{ fontSize: 12.5, marginBottom: 10 }}>{route.summary}</div>
                 <dl className="kv">
                   <dt>type</dt>
                   <dd>{route.kind}</dd>

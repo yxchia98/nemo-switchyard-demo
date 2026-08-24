@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server";
+import type { ChatContentPart } from "@/lib/types";
 import {
   baseUrl,
   describeUpstreamError,
@@ -28,7 +29,7 @@ export const dynamic = "force-dynamic";
 export async function POST(req: NextRequest) {
   let payload: {
     model?: string;
-    messages?: Array<{ role: string; content: string }>;
+    messages?: Array<{ role: string; content: string | ChatContentPart[] }>;
     sessionId?: string | null;
     temperature?: number;
     maxTokens?: number | null;
@@ -46,6 +47,8 @@ export async function POST(req: NextRequest) {
   if (!Array.isArray(messages) || messages.length === 0) {
     return sse(errorStream("Missing `messages`."));
   }
+  const messageError = validateMessages(messages);
+  if (messageError) return sse(errorStream(messageError, 400));
 
   const wantUsage = process.env.SWITCHYARD_STREAM_USAGE !== "0";
   const sessionId = payload.sessionId?.trim() || "";
@@ -113,7 +116,10 @@ export async function POST(req: NextRequest) {
   if (!upstream.ok || !upstream.body) {
     clearTimeout(timer);
     const text = upstream.body ? await upstream.text() : "";
-    return sse(errorStream(describeUpstreamError(upstream.status, text), upstream.status));
+    const imageHint = /image|vision|multimodal|modality/i.test(text)
+      ? " The selected Switchyard target may not support image input; use vision-capable strong and weak targets in routes.toml."
+      : "";
+    return sse(errorStream(`${describeUpstreamError(upstream.status, text)}${imageHint}`, upstream.status));
   }
 
   const decision = parseDecision(upstream.headers);
@@ -214,6 +220,38 @@ export async function POST(req: NextRequest) {
   });
 
   return sse(stream);
+}
+
+
+const SUPPORTED_IMAGE_RE = /^data:(image\/(?:jpeg|png|webp|gif));base64,([a-z0-9+/=]+)$/i;
+const MAX_IMAGES = 4;
+const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
+
+function validateMessages(messages: Array<{ role: string; content: string | ChatContentPart[] }>): string | null {
+  let imageCount = 0;
+  for (const message of messages) {
+    if (!message || !["system", "user", "assistant"].includes(message.role)) {
+      return "Each message must have a supported role.";
+    }
+    if (typeof message.content === "string") continue;
+    if (!Array.isArray(message.content) || message.role !== "user") {
+      return "Only user messages may contain multimodal content blocks.";
+    }
+    for (const part of message.content) {
+      if (part?.type === "text" && typeof part.text === "string") continue;
+      if (part?.type !== "image_url" || typeof part.image_url?.url !== "string") {
+        return "Unsupported multimodal content block.";
+      }
+      const match = part.image_url.url.match(SUPPORTED_IMAGE_RE);
+      if (!match) return "Images must be local PNG, JPEG, WebP, or GIF data URLs.";
+      imageCount += 1;
+      if (imageCount > MAX_IMAGES) return `A request may include at most ${MAX_IMAGES} images.`;
+      const padding = (match[2].match(/=*$/)?.[0].length ?? 0);
+      const bytes = Math.floor((match[2].length * 3) / 4) - padding;
+      if (bytes > MAX_IMAGE_BYTES) return "Each image must be 5 MB or smaller.";
+    }
+  }
+  return null;
 }
 
 function sse(stream: ReadableStream<Uint8Array>) {

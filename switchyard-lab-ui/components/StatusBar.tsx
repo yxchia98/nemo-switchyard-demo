@@ -31,14 +31,16 @@ export function StatusBar({
             : "router unreachable"}
       </span>
 
-      <span className="pill" title={registeredIds.join("\n")}>
+      <span className="pill brand" title={registeredIds.join("\n")}>
         {registeredIds.length} route{registeredIds.length === 1 ? "" : "s"} on /v1/models
       </span>
 
       {health?.baseUrl && <span className="pill">{health.baseUrl}</span>}
 
+      <span className="spacer" />
+
       <button className="btn" onClick={onRefresh} disabled={checking} type="button">
-        Recheck
+        Recheck router
       </button>
     </>
   );

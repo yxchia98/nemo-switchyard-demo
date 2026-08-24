@@ -1,8 +1,10 @@
 # NeMo Switchyard Lab Console
+### Dell Technologies APJ AI Innovation Hub
 
-A Next.js frontend for a **running** NVIDIA NeMo Switchyard router. Built for a lab
-session: attendees send prompts through a route and immediately see **which target
-served the turn, why, how fast, and at what token cost**.
+A Next.js frontend for a **running** NVIDIA NeMo Switchyard router, themed for the Dell
+Technologies APJ AI Innovation Hub. Built for a lab session: attendees send prompts
+through a route and immediately see **which target served the turn, why, how fast, and at
+what token cost**.
 
 The browser never talks to the router directly. Every call is proxied through Next.js
 route handlers in `app/api/*`, so the router URL stays in server-side env config and
@@ -56,6 +58,89 @@ npm run dev                    # http://localhost:3000
 | `SWITCHYARD_API_KEY` | *(empty)* | Only needed if you front the router with a gateway; Switchyard itself needs no client auth |
 | `SWITCHYARD_STREAM_USAGE` | `1` | Ask for token counts in the final stream chunk; set `0` if your build rejects `stream_options` |
 | `SWITCHYARD_TIMEOUT_MS` | `180000` | Per-request timeout |
+| `NEXT_PUBLIC_BRAND_LOGO_SRC` | *(unset)* | Optional path to the official Dell logo in `public/`; see [Branding](#branding) |
+
+---
+
+## Branding
+
+The console is themed with the Dell Technologies palette and carries the **Dell
+Technologies APJ AI Innovation Hub** lockup in the header, page title, and footer.
+
+### Colour and type
+
+| Token | Value | Use |
+| --- | --- | --- |
+| Dell Blue | `#0076CE` (Pantone 2174 C) | Primary brand colour: header, primary button, active route, section headings |
+| Dell Blue dark / deep / ink | `#005CA3` / `#00457A` / `#002B4D` | Header gradient, hover states, rationale text |
+| Dell Gray | `#AAAAAA` | Neutral / "unknown tier" bars |
+| Dell Dark Gray | `#444444` | Preformatted header dumps |
+
+Routing tiers deliberately use amber (`#B45309`) and teal (`#0F766E`) rather than blue, so
+a routing decision never visually competes with brand colour. All foreground/background
+pairs were checked to **WCAG AA** (lowest is 4.61:1).
+
+Dell's corporate typefaces are **Museo** and **Museo Sans**, which are licensed. The
+stylesheet requests `Museo Sans` first and falls back through the closest widely available
+geometric-humanist stack, so nothing breaks on a machine without the licensed fonts. If
+your Hub image has them installed, they load automatically.
+
+### About the logo
+
+`components/BrandLockup.tsx` **does not redraw the Dell Technologies logo.** The circular
+DELL mark with the slanted "E" is a registered trademark, and brand standards require the
+official asset with correct clear space (the height of the "D" on all sides) and a 30px
+minimum digital size. Redrawing it in code would violate that.
+
+Instead the lockup ships in two modes:
+
+1. **Default** — a typographic lockup ("Dell Technologies" / "APJ AI Innovation Hub")
+   next to an *original* routing glyph drawn for this console: one inbound request fanning
+   out to two model tiers. Safe to use as-is.
+2. **Official mark** — download the approved logo from the Dell brand resource center or
+   partner portal, drop it in `public/`, and set:
+
+   ```bash
+   # .env.local
+   NEXT_PUBLIC_BRAND_LOGO_SRC=/dell-technologies-logo-white.svg
+   ```
+
+   The real mark then replaces the glyph. Use the **white** logo variant — the header is a
+   dark Dell Blue gradient, and the Dell Blue logo is only approved on white or Dell Light
+   Gray backgrounds.
+
+Swap the wording for a different Hub or team by editing `components/BrandLockup.tsx` and
+the footer line in `app/page.tsx`.
+
+---
+
+## Image reasoning
+
+The composer accepts image input three ways: click **Add image**, drag files onto the
+composer, or paste a screenshot directly from the clipboard. A request may contain up to
+four PNG, JPEG, WebP, or GIF files at 5 MB each. Images are read locally as data URLs and
+sent through the server-side proxy as OpenAI-compatible content blocks:
+
+```json
+{
+  "role": "user",
+  "content": [
+    { "type": "text", "text": "What is unusual in this image?" },
+    { "type": "image_url", "image_url": { "url": "data:image/png;base64,...", "detail": "auto" } }
+  ]
+}
+```
+
+The app never uploads images anywhere except the configured Switchyard request path. The
+proxy rejects unsupported formats, non-data URLs, oversized files, and more than four
+images before forwarding. For a text-only follow-up, it replays only the most recent image
+turn; it does not repeatedly resend every image in the transcript.
+
+> **Route requirement:** Switchyard can choose either `strong` or `weak`, so both answer
+> targets used by an image-routing lab should support OpenAI-style image input. If a chosen
+> OpenRouter model is text-only, the UI surfaces the provider error and recommends using
+> vision-capable targets. Verify current model modality support before the session; free
+> model variants can change independently of this frontend.
 
 ---
 
@@ -139,7 +224,9 @@ app/
   page.tsx              Console: route picker, transcript, decision panels, tally
   layout.tsx, globals.css
 components/
+  BrandLockup.tsx       Dell Technologies APJ AI Innovation Hub lockup (+ optional official logo)
   DecisionPanel.tsx     Per-turn: tier badge, model, rationale, latency, tokens, raw headers
+  ImageAttachments.tsx  File picker, paste/drop processing, validation and removable previews
   RoutePicker.tsx       The four routes; flags any not listed on /v1/models
   RouteTally.tsx        Strong/weak split, avg latency and tokens per route
   StatusBar.tsx         Health + route discovery indicators
@@ -159,8 +246,10 @@ lib/
 | `Route not found` | The `model` field does not match any route `id` | Use the full id, e.g. `switchyard/smart`, not the table key `smart` |
 | 401 / 403 from upstream | `OPENROUTER_API_KEY` not exported in the server's shell | `test -n "$OPENROUTER_API_KEY" && echo set \|\| echo missing` |
 | Token counts blank | Build ignores `stream_options` | Expected; latency and tier still work. Use `/v1/stats` for authoritative usage |
+| Image request rejected | Selected target does not accept image input | Configure vision-capable `strong` and `weak` targets; confirm OpenRouter modality support |
+| Image will not attach | Unsupported format, over 5 MB, or already four attached | Use PNG/JPEG/WebP/GIF and reduce file size/count |
 | Tier always "unknown" | No routing headers and an unrecognized model id | Add the model id to `TARGET_MODELS` in `lib/routes.ts` |
 
-Switchyard is pre-alpha and explicitly not for production; this console is lab
-instrumentation, not a production gateway. Pin your Switchyard version before the
+Switchyard is pre-alpha and explicitly not for production; this console is Dell APJ AI
+Innovation Hub lab instrumentation, not a production gateway. Pin your Switchyard version before the
 session so header names and endpoints do not shift mid-lab.

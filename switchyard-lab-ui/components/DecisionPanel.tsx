@@ -2,10 +2,14 @@
 
 import type { Turn } from "@/lib/types";
 
-const TIER_COLOR: Record<string, string> = {
-  strong: "var(--strong)",
-  weak: "var(--weak)",
-  unknown: "var(--muted)",
+/**
+ * Tier colours intentionally sit outside the Dell Blue chrome so a routing
+ * decision never visually competes with brand colour.
+ */
+const TIER_STYLE: Record<string, { color: string; bg: string }> = {
+  strong: { color: "var(--strong)", bg: "var(--strong-bg)" },
+  weak: { color: "var(--weak)", bg: "var(--weak-bg)" },
+  unknown: { color: "var(--unknown)", bg: "#f1f5f9" },
 };
 
 const fmtMs = (v: number | null) => (v === null ? "-" : v >= 1000 ? `${(v / 1000).toFixed(2)}s` : `${v}ms`);
@@ -17,7 +21,7 @@ const fmtMs = (v: number | null) => (v === null ? "-" : v >= 1000 ? `${(v / 1000
 export function DecisionPanel({ turn }: { turn: Turn }) {
   const d = turn.decision;
   const tier = turn.tier;
-  const color = TIER_COLOR[tier] ?? TIER_COLOR.unknown;
+  const style = TIER_STYLE[tier] ?? TIER_STYLE.unknown;
 
   const tierLabel =
     tier === "strong" ? "STRONG" : tier === "weak" ? "WEAK" : turn.streaming ? "ROUTING..." : "TIER UNKNOWN";
@@ -27,13 +31,16 @@ export function DecisionPanel({ turn }: { turn: Turn }) {
   const hasRoutingHeaders = d ? Object.keys(d.raw).length > 0 : false;
 
   return (
-    <div className="decision" style={{ ["--tier" as any]: color }}>
+    <div
+      className="decision"
+      style={{ ["--tier" as any]: style.color, ["--tier-bg" as any]: style.bg }}
+    >
       <div className="d-top">
         <span className="tier-badge">{tierLabel}</span>
         <span className="mono-sm">{model ?? "resolving target..."}</span>
         {d?.selectedTarget && <span className="pill">target: {d.selectedTarget}</span>}
         {d?.escalated === true && <span className="pill bad">escalated</span>}
-        {typeof d?.score === "number" && <span className="pill">score {d.score.toFixed(3)}</span>}
+        {typeof d?.score === "number" && <span className="pill brand">score {d.score.toFixed(3)}</span>}
         <span className="spacer" />
         <span className="mono-sm">{turn.routeId}</span>
       </div>
@@ -79,8 +86,7 @@ export function DecisionPanel({ turn }: { turn: Turn }) {
       {d && !hasRoutingHeaders && !turn.streaming && (
         <div className="no-headers">
           No <code>x-switchyard-*</code> headers on this response. The tier above was inferred from the
-          resolved model id in the stream. Compare with <code>curl -s $SWITCHYARD/v1/stats</code> or the
-          router&apos;s own log line for this request.
+          resolved model id in the stream. Cross-check with <code>/v1/stats</code> in the right rail.
         </div>
       )}
 
