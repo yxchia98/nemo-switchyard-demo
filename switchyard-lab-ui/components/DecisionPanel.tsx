@@ -70,10 +70,6 @@ export function DecisionPanel({ turn }: { turn: Turn }) {
           <div className="m-label">Finish</div>
           <div className="m-value">{turn.finishReason ?? (turn.streaming ? "streaming" : "-")}</div>
         </div>
-        <div className="metric">
-          <div className="m-label">Session</div>
-          <div className="m-value">{turn.sessionId ?? "none"}</div>
-        </div>
       </div>
 
       {d?.rationale && (

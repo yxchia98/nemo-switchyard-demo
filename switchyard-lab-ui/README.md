@@ -151,7 +151,7 @@ local name. All four ids are registered on `GET /v1/models`.
 
 | Route id | Type | What it demonstrates |
 | --- | --- | --- |
-| `switchyard/smart` | `llm_classifier` / capability | A classifier scores the request against `base_threshold = 0.5`; `session_affinity` pins a conversation to one tier |
+| `switchyard/smart` | `llm_classifier` / capability | A classifier scores the request against `base_threshold = 0.5`; this client sends no session identifier |
 | `switchyard/stage` | `stage_router` | Reads conversation signals over a 3-turn window instead of paying for a classifier call; `efficient_first` |
 | `switchyard/escalate` | `llm_classifier` / escalation | Starts weak; a judge promotes the session after `confirmations = 2`, and promotion is sticky |
 | `switchyard/ab-test` | `random` | Content-blind 3:7 strong:weak split from `seed = 42` — the baseline the others are judged against |
@@ -172,15 +172,15 @@ Targets: `strong` = `nvidia/nemotron-3-ultra-550b-a55b:free`, and `weak`, `class
    Content is irrelevant here — that is the point.
 2. **Introduce content awareness.** Switch to `switchyard/smart`. Send `hi`, then
    `derive the closed form of the Fibonacci recurrence`. The tier badge should move.
-3. **Show affinity.** Keep the session id fixed and resend a hard prompt: the earlier
-   decision is reused. Clear the session id and resend — now `message_hash_fallback`
-   decides per message.
+3. **Show hash fallback.** Resend the exact same hard prompt, then change one phrase.
+   Because the client sends no session identifier, `message_hash_fallback` determines
+   repeatability rather than a provider-specific session field.
 4. **Show signal-driven routing.** On `switchyard/stage`, paste three turns of failing
    test output. Watch it climb to the capable tier, then send a trivial follow-up and
    watch the 3-turn window let it fall back.
-5. **Show sticky escalation.** On `switchyard/escalate`, reuse one session id and push an
-   unsolved problem. Promotion needs two confirmations; afterwards even an easy prompt
-   stays on strong.
+5. **Show escalation.** On `switchyard/escalate`, push an unsolved problem across
+   multiple history-bearing turns. Promotion needs two confirmations; inspect whether
+   your Switchyard build retains it without a client session identifier.
 6. **Reconcile with the server.** Click *Fetch /v1/stats* and compare the router's own
    record against the client-side tally.
 
@@ -207,9 +207,10 @@ candidate names rather than hardcoding one spelling. If no routing headers are p
 the tier is inferred from the resolved model id in the stream and the decision panel says
 so explicitly instead of silently guessing.
 
-Session identity is sent three ways (`user` and `session_id` in the body, plus
-`x-switchyard-session-id` / `x-session-id` headers) so affinity works regardless of where
-your build reads it.
+The client deliberately sends no session identity: no `session_id`, `user`, or session
+headers are added by the browser or proxy. This keeps the request provider-neutral.
+Router behavior that requires a stable client session should be considered unavailable;
+`message_hash_fallback` remains available for the smart route.
 
 ---
 

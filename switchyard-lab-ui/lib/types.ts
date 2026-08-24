@@ -24,7 +24,6 @@ export interface DecisionEvent {
   escalated: boolean | null;
   raw: Record<string, string>;
   requestedRoute?: string;
-  sessionId?: string | null;
   source?: string;
 }
 
@@ -38,7 +37,6 @@ export interface Usage {
 export interface Turn {
   id: string;
   routeId: string;
-  sessionId: string | null;
   prompt: string;
   images: ImageAttachment[];
   answer: string;

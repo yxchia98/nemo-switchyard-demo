@@ -11,17 +11,17 @@ base_url = "https://integrate.api.nvidia.com/v1/chat/completions"
 api_key_env = "NVIDIA_API_KEY"
 
 [targets.classifier]
-id = "nvidia/nemotron-3.5-lightning-30b-a3b"
-llm_client = "nim"
+id = "nvidia/nemotron-3.5-lightning:free"
+llm_client = "openrouter"
 extra_body = { chat_template_kwargs = { enable_thinking = true }, "reasoning_budget" = "2048" }
 
 [targets.weak]
-id = "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning"
-llm_client = "nim"
+id = "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free"
+llm_client = "openrouter"
 
 [targets.strong]
-id = "nvidia/nemotron-3-ultra-550b-a55b"
-llm_client = "nim"
+id = "nvidia/nemotron-3-ultra-550b-a55b:free"
+llm_client = "openrouter"
 
 [routes.ab_test]
 id = "switchyard/ab-test"

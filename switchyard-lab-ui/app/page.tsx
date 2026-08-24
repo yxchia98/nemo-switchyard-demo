@@ -11,11 +11,9 @@ import { DEFAULT_ROUTE_ID, findRoute } from "@/lib/routes";
 import { useSwitchyardChat } from "@/lib/useSwitchyardChat";
 import type { ImageAttachment } from "@/lib/types";
 
-const newSessionId = () => `aiih-${Math.random().toString(36).slice(2, 8)}`;
 
 export default function Page() {
   const [routeId, setRouteId] = useState(DEFAULT_ROUTE_ID);
-  const [sessionId, setSessionId] = useState("");
   const [systemPrompt, setSystemPrompt] = useState("");
   const [temperature, setTemperature] = useState(0.7);
   const [includeHistory, setIncludeHistory] = useState(true);
@@ -33,10 +31,6 @@ export default function Page() {
   const { turns, busy, send, stop, reset } = useSwitchyardChat();
   const scrollRef = useRef<HTMLDivElement>(null);
   const route = useMemo(() => findRoute(routeId), [routeId]);
-
-  // Session affinity on switchyard/smart and sticky escalation on
-  // switchyard/escalate both need a stable id, so we mint one on load.
-  useEffect(() => setSessionId(newSessionId()), []);
 
   const probe = useCallback(async () => {
     setChecking(true);
@@ -92,7 +86,6 @@ export default function Page() {
       prompt: text,
       images: submittedImages,
       routeId,
-      sessionId,
       systemPrompt,
       temperature,
       includeHistory,
@@ -100,7 +93,7 @@ export default function Page() {
       // replay history recorded on the same route.
       history: turns.filter((t) => t.routeId === routeId),
     });
-  }, [prompt, images, busy, send, routeId, sessionId, systemPrompt, temperature, includeHistory, turns]);
+  }, [prompt, images, busy, send, routeId, systemPrompt, temperature, includeHistory, turns]);
 
   const loadStats = useCallback(async () => {
     setServerStats("loading...");
@@ -143,26 +136,6 @@ export default function Page() {
             registeredIds={registeredIds}
             modelsLoaded={modelsLoaded}
           />
-
-          <p className="section-title">Session</p>
-          <div className="field">
-            <label htmlFor="session">Session id</label>
-            <div className="row">
-              <input
-                id="session"
-                value={sessionId}
-                onChange={(e) => setSessionId(e.target.value)}
-                placeholder="empty = message-hash fallback"
-              />
-              <button className="btn" onClick={() => setSessionId(newSessionId())} type="button">
-                New
-              </button>
-            </div>
-            <div className="hint">
-              Held steady, this is what makes <code>session_affinity</code> and sticky escalation
-              observable. Clear it to fall back to <code>message_hash_fallback</code>.
-            </div>
-          </div>
 
           <p className="section-title">Request</p>
           <div className="field">

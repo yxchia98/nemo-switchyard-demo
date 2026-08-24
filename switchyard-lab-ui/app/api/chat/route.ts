@@ -30,7 +30,6 @@ export async function POST(req: NextRequest) {
   let payload: {
     model?: string;
     messages?: Array<{ role: string; content: string | ChatContentPart[] }>;
-    sessionId?: string | null;
     temperature?: number;
     maxTokens?: number | null;
   };
@@ -51,8 +50,6 @@ export async function POST(req: NextRequest) {
   if (messageError) return sse(errorStream(messageError, 400));
 
   const wantUsage = process.env.SWITCHYARD_STREAM_USAGE !== "0";
-  const sessionId = payload.sessionId?.trim() || "";
-
   const body: Record<string, unknown> = {
     model,
     messages,
@@ -62,19 +59,7 @@ export async function POST(req: NextRequest) {
   if (typeof payload.maxTokens === "number" && payload.maxTokens > 0) {
     body.max_tokens = payload.maxTokens;
   }
-  // Session affinity on switchyard/smart and sticky escalation on
-  // switchyard/escalate both key off a stable identity. Different pre-alpha
-  // builds read it from the header or from the body, so we send both.
-  if (sessionId) {
-    body.user = sessionId;
-    body.session_id = sessionId;
-  }
-
   const headers = upstreamHeaders();
-  if (sessionId) {
-    headers.set("x-switchyard-session-id", sessionId);
-    headers.set("x-session-id", sessionId);
-  }
 
   const url = `${baseUrl()}/v1/chat/completions`;
   const controller = new AbortController();
@@ -93,7 +78,7 @@ export async function POST(req: NextRequest) {
     // Some builds reject unknown request fields - retry once without them.
     if (upstream.status === 400 && wantUsage) {
       const probe = await upstream.clone().text();
-      if (/stream_options|session_id|unknown field|unrecognized/i.test(probe)) {
+      if (/stream_options|unknown field|unrecognized/i.test(probe)) {
         upstream = await fetch(url, {
           method: "POST",
           headers,
@@ -130,7 +115,7 @@ export async function POST(req: NextRequest) {
       const send = (event: string, data: unknown) =>
         ctrl.enqueue(enc.encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`));
 
-      send("decision", { ...decision, requestedRoute: model, sessionId: sessionId || null });
+      send("decision", { ...decision, requestedRoute: model });
 
       const reader = upstream.body!.getReader();
       const dec = new TextDecoder();
@@ -172,7 +157,6 @@ export async function POST(req: NextRequest) {
                     ...decision,
                     selectedModel: json.model,
                     requestedRoute: model,
-                    sessionId: sessionId || null,
                     source: "stream-chunk",
                   });
                 }
