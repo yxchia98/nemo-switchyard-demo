@@ -11,7 +11,7 @@ base_url = "https://integrate.api.nvidia.com/v1/chat/completions"
 api_key_env = "NVIDIA_API_KEY"
 
 [targets.classifier]
-id = "nvidia/nemotron-3.5-lightning:free"
+id = "nvidia/nemotron-3-super-120b-a12b:free"
 llm_client = "openrouter"
 extra_body = { reasoning = { enabled = false } }
 
@@ -47,7 +47,7 @@ mode = "capability"
 classifier_target = "classifier"
 strong_target = "strong"
 weak_target = "weak"
-base_threshold = 0.8
+base_threshold = 0.5
 threshold_step = 0.1
 
 [routes.stage]

@@ -1,10 +1,5 @@
 schema_version = 1
 
-[llm_clients.openrouter]
-format = "openai_chat"
-base_url = "https://openrouter.ai/api/v1"
-api_key_env = "OPENROUTER_API_KEY"
-
 [llm_clients.nim]
 format = "openai_chat"
 base_url = "https://integrate.api.nvidia.com/v1/chat/completions"
@@ -59,12 +54,3 @@ efficient_target = "weak"
 picker = "efficient_first"
 confidence_threshold = 0.5
 recent_turn_window = 3 
-
-# [routes.gated]
-# id = "switchyard/gated"
-# type = "advisor"
-# executor_target = "executor"
-# advisor_target = "advisor"
-# max_reviews = 3
-# gate_stall_turns = 30
-# gate_min_tool_results = 3
