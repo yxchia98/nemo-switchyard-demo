@@ -1,131 +1,58 @@
-# compose.yaml
-name: nemotron-router
-
-x-vllm-common: &vllm-common
-  image: ${VLLM_IMAGE:-vllm/vllm-openai:latest}
-  restart: unless-stopped
-  ipc: host
-  shm_size: "32gb"
-  environment:
-    CUDA_VISIBLE_DEVICES: "0"
-    HF_TOKEN: "${HF_TOKEN:-}"
-    PYTORCH_CUDA_ALLOC_CONF: "expandable_segments:True"
-  volumes:
-    - huggingface-cache:/root/.cache/huggingface
-  ulimits:
-    memlock:
-      soft: -1
-      hard: -1
-    stack: 67108864
-  deploy:
-    resources:
-      reservations:
-        devices:
-          - driver: nvidia
-            device_ids: ["0"]
-            capabilities: [gpu]
-
 services:
-  weak-model:
-    <<: *vllm-common
-    container_name: nemotron-weak-router
+  vllm:
+    image: vllm/vllm-openai:v0.28.0
+    container_name: nemotron-vllm
+    restart: unless-stopped
+    gpus: all
+    privileged: true
+    ipc: host
+
     ports:
-      - "8001:8000"
+      - "8000:8000"
+
+    environment:
+      HF_TOKEN: "${HF_TOKEN}"
+
+    volumes:
+      - "${HOME}/.cache/huggingface:/root/.cache/huggingface"
+
     command:
-      - --model
-      - nvidia/NVIDIA-Nemotron-3-Nano-4B-FP8
-      - --served-model-name
-      - weak-model
-      - --dtype
-      - auto
-      - --gpu-memory-utilization
-      - "0.15"
-      - --max-model-len
-      - "8192"
-      - --max-num-seqs
-      - "8"
-      - --kv-cache-dtype
-      - fp8
+      - nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4
       - --mamba-backend
       - flashinfer
-      - --mamba-ssm-cache-dtype
-      - float32
+      - --enable-prefix-caching
+      - --max-num-batched-tokens
+      - "16384"
+      - --kv-cache-dtype
+      - fp8
+      - --moe-backend
+      - marlin
+      - --attention-backend
+      - FLASHINFER
+      - --linear-backend
+      - marlin
+      - --attention-config
+      - '{"use_trtllm_attention":true}'
+      - --enable-flashinfer-autotune
+      - --mamba-cache-mode
+      - none
+      - --async-scheduling
+      - --enable-chunked-prefill
+      - --gpu-memory-utilization
+      - "0.8"
+      - --load-format
+      - instanttensor
+      - --safetensors-load-strategy
+      - prefetch
+      - --tensor-parallel-size
+      - "1"
       - --reasoning-parser
       - nemotron_v3
-      - --tool-call-parser
-      - qwen3_coder
-      - --enable-auto-tool-choice
-      - --trust-remote-code
-      - --enforce-eager
-      - --disable-log-requests
-    healthcheck:
-      test:
-        - CMD-SHELL
-        - >
-          python3 -c "import urllib.request;
-          urllib.request.urlopen(
-          'http://localhost:8000/health',
-          timeout=5)"
-      interval: 15s
-      timeout: 10s
-      retries: 120
-      start_period: 180s
-
-  strong-model:
-    <<: *vllm-common
-    container_name: nemotron-strong
-    depends_on:
-      weak-model:
-        condition: service_healthy
-    ports:
-      - "8002:8000"
-    environment:
-      CUDA_VISIBLE_DEVICES: "0"
-      HF_TOKEN: "${HF_TOKEN:-}"
-      PYTORCH_CUDA_ALLOC_CONF: "expandable_segments:True"
-      VLLM_USE_FLASHINFER_MOE_FP8: "1"
-    command:
-      - --model
-      - nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4
-      - --served-model-name
-      - strong-model
-      - --dtype
-      - auto
-      - --gpu-memory-utilization
-      - "0.55"
-      - --max-model-len
-      - "16384"
-      - --max-num-seqs
-      - "4"
-      - --kv-cache-dtype
-      - fp8
-      - --mamba-backend
-      - flashinfer
       - --mamba-ssm-cache-dtype
       - float16
       - --enable-mamba-cache-stochastic-rounding
       - --mamba-cache-philox-rounds
       - "5"
-      - --reasoning-parser
-      - nemotron_v3
-      - --tool-call-parser
-      - qwen3_coder
       - --enable-auto-tool-choice
-      - --trust-remote-code
-      - --enforce-eager
-      - --disable-log-requests
-    healthcheck:
-      test:
-        - CMD-SHELL
-        - >
-          python3 -c "import urllib.request;
-          urllib.request.urlopen(
-          'http://localhost:8000/health',
-          timeout=5)"
-      interval: 15s
-      timeout: 10s
-      retries: 160
-      start_period: 300s
-
-volumes:
-  huggingface-cache:
+      - --tool-call-parser
+      - qwen3_xml
