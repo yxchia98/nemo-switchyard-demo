@@ -6,7 +6,7 @@ base_url = "https://integrate.api.nvidia.com/v1/chat/completions"
 api_key_env = "NVIDIA_API_KEY"
 
 [targets.classifier]
-id = "nvidia/nemotron-3.5-lightning-30b-a3b"
+id = "nvidia/nemotron-3-super-120b-a12b"
 llm_client = "nim"
 extra_body = { "chat_template_kwargs" = { "enable_thinking" = "false" }, "reasoning_budget" = "1024" }
 
@@ -23,7 +23,7 @@ extra_body = { "reasoning_effort" = "low" }
 id = "switchyard/ab-test"
 type = "random"
 targets = ["strong", "weak"]
-weights = [3, 7]
+weights = [5, 5]
 seed = 42
 
 [routes.escalate]
@@ -43,8 +43,8 @@ mode = "capability"
 classifier_target = "classifier"
 strong_target = "strong"
 weak_target = "weak"
-base_threshold = 0.5
-threshold_step = 0.05
+base_threshold = 0.3
+threshold_step = 0.1
 prompt = """
 Estimate whether the weak target can complete the request.
 Return exactly one JSON object matching the response schema supplied with the request.

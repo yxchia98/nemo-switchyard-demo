@@ -33,6 +33,7 @@ mkdir -p "$LOCAL_NIM_CACHE"
 docker run -it --rm \
     --gpus all \
     --shm-size=16GB \
+    -e NGC_API_KEY="$NGC_API_KEY" \
     -v "$LOCAL_NIM_CACHE:/opt/nim/.cache" \
     -p 8000:8000 \
     nvcr.io/nim/nvidia/nemotron-3.5-lightning-30b-a3b:latest
@@ -57,6 +58,7 @@ docker run -d \
     --restart=unless-stopped \
     --gpus all \
     --shm-size=16GB \
+    -e NGC_API_KEY="$NGC_API_KEY" \
     -v "$LOCAL_NIM_CACHE:/opt/nim/.cache" \
     -p 8000:8000 \
     --pull=never \

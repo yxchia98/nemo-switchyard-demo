@@ -11,16 +11,16 @@ base_url = "https://integrate.api.nvidia.com/v1/chat/completions"
 api_key_env = "NVIDIA_API_KEY"
 
 [targets.classifier]
-id = "nvidia/nemotron-3-super-120b-a12b:free"
+id = "openrouter/free"
 llm_client = "openrouter"
 extra_body = { reasoning = { enabled = false } }
 
 [targets.weak]
-id = "nvidia/nemotron-3.5-lightning:free"
+id = "openrouter/free"
 llm_client = "openrouter"
 
 [targets.strong]
-id = "inclusionai/ling-3.0-flash-fin:free"
+id = "nvidia/nemotron-3-super-120b-a12b:free"
 llm_client = "openrouter"
 
 [routes.ab_test]
