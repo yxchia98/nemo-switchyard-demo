@@ -1,3 +1,31 @@
+# Docker Compose Local Single vLLM Model
+
+## Start the stack
+```bash
+export HF_TOKEN="hf_your_token"
+
+docker compose build --no-cache
+docker compose up -d
+```
+### Endpoints
+```text
+Model: http://localhost:8000/v1
+```
+```bash
+curl http://localhost:8000/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4",
+    "messages": [{"role": "user", "content": "Hello"}],
+    "max_tokens": 32
+  }'
+```
+
+
+### Endpoints
+```text
+Weak/router: http://localhost:8001/v1
+
 # Docker Compose Local Models
 
 ## Start the stack
