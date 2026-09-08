@@ -38,6 +38,33 @@ docker run -it --rm \
     nvcr.io/nim/nvidia/nemotron-3.5-lightning-30b-a3b:latest
 ```
 
+```bash
+export LOCAL_NIM_CACHE="$HOME/.cache/nim"
+mkdir -p "$LOCAL_NIM_CACHE"
+
+IMAGE="nvcr.io/nim/nvidia/nemotron-3.5-lightning-30b-a3b:latest"
+CONTAINER="nemotron-3.5-lightning"
+
+# Retry the image download indefinitely.
+until docker pull "$IMAGE"; do
+    echo "Download failed; retrying in 15 seconds..."
+    sleep 15
+done
+
+# Restart the container whenever its process exits.
+docker run -d \
+    --name "$CONTAINER" \
+    --restart=unless-stopped \
+    --gpus all \
+    --shm-size=16GB \
+    -v "$LOCAL_NIM_CACHE:/opt/nim/.cache" \
+    -p 8000:8000 \
+    --pull=never \
+    "$IMAGE"
+
+docker logs -f "$CONTAINER"
+```
+
 ## Test the NIM
 ```bash
 curl -X 'POST' \
