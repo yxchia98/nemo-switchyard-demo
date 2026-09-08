@@ -28,7 +28,7 @@ The 4B model has an official vLLM recipe, while Nemotron 3.5 Lightning is a 30B-
 ```bash
 docker pull vllm/vllm-openai:v0.28.0
 
-docker run --gpus all \
+docker run -itd --gpus all \
   --privileged --ipc=host -p 8000:8000 \
   -v ~/.cache/huggingface:/root/.cache/huggingface \
   vllm/vllm-openai:v0.28.0 nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4 \
