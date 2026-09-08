@@ -49,6 +49,10 @@ strong_target = "strong"
 weak_target = "weak"
 base_threshold = 0.5
 threshold_step = 0.1
+prompt = """
+Estimate whether the weak target can complete the request.
+Return exactly one JSON object matching the response schema supplied with the request.
+"""
 
 [routes.stage]
 id = "switchyard/stage"
