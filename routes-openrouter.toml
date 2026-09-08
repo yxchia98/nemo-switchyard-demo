@@ -58,12 +58,3 @@ efficient_target = "weak"
 picker = "efficient_first"
 confidence_threshold = 0.5
 recent_turn_window = 3 
-
-# [routes.gated]
-# id = "switchyard/gated"
-# type = "advisor"
-# executor_target = "executor"
-# advisor_target = "advisor"
-# max_reviews = 3
-# gate_stall_turns = 30
-# gate_min_tool_results = 3
