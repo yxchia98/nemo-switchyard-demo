@@ -1,26 +1,20 @@
 schema_version = 1
 
+[llm_clients.local_nim]
+format = "openai_chat"
+base_url = "http://192.168.1.10:8000/v1/chat/completions"
+
 [llm_clients.openrouter]
 format = "openai_chat"
 base_url = "https://openrouter.ai/api/v1"
 api_key_env = "OPENROUTER_API_KEY"
 
-[llm_clients.nim]
-format = "openai_chat"
-base_url = "https://integrate.api.nvidia.com/v1/chat/completions"
-api_key_env = "NVIDIA_API_KEY"
-
-[targets.classifier]
-id = "nvidia/nemotron-3-super-120b-a12b:free"
-llm_client = "openrouter"
-extra_body = { reasoning = { enabled = false } }
-
 [targets.weak]
-id = "nvidia/nemotron-3.5-lightning:free"
-llm_client = "openrouter"
+id = "nvidia/nemotron-3.5-lightning"
+llm_client = "local_nim"
 
 [targets.strong]
-id = "inclusionai/ling-3.0-flash-fin:free"
+id = "openrouter/free"
 llm_client = "openrouter"
 
 [routes.ab_test]
@@ -44,8 +38,8 @@ escalation = { confirmations = 2, recent_turn_window = 28, window_message_chars 
 id = "switchyard/smart"
 type = "llm_classifier"
 mode = "capability"
-classifier_target = "classifier"
-strong_target = "classifier"
+classifier_target = "weak"
+strong_target = "strong"
 weak_target = "weak"
 base_threshold = 0.5
 threshold_step = 0.05
