@@ -12,7 +12,6 @@ api_key_env = "OPENROUTER_API_KEY"
 [targets.weak]
 id = "nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4"
 llm_client = "local_nim"
-extra_body = { chat_template_kwargs = { enable_thinking = false } }
 
 [targets.strong]
 id = "openrouter/free"
@@ -42,8 +41,8 @@ mode = "capability"
 classifier_target = "weak"
 strong_target = "strong"
 weak_target = "weak"
-base_threshold = 0.3
-threshold_step = 0.1
+base_threshold = 0.5
+threshold_step = 0.05
 prompt = """
 Estimate whether the weak target can complete the request.
 Return exactly one JSON object matching the response schema supplied with the request.
