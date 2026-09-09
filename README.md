@@ -215,7 +215,7 @@ curl -s http://127.0.0.1:4000/v1/chat/completions \
     "messages": [
       {
         "role": "user",
-        "content": "Explain and compare two geometric methods for approximating pi, including their assumptions and error behavior."
+        "content": "Explain the derivative of fibonacci."
       }
     ]
   }' | jq
