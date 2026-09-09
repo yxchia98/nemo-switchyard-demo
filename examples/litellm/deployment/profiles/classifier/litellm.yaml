@@ -1,11 +1,11 @@
 model_list:
-  - model_name: switchyard/smart
-    litellm_params:
-      model: openrouter/nvidia/nemotron-3-ultra-550b-a55b:free
-      api_key: os.environ/OPENROUTER_API_KEY
-  - model_name: switchyard/smart
+  - model_name: switchyard
     litellm_params:
       model: openrouter/nvidia/nemotron-3.5-lightning:free
+      api_key: os.environ/OPENROUTER_API_KEY
+  - model_name: switchyard
+    litellm_params:
+      model: openrouter/nvidia/nemotron-3-ultra-550b-a55b:free
       api_key: os.environ/OPENROUTER_API_KEY
 
 router_settings:
@@ -15,7 +15,3 @@ router_settings:
 litellm_settings:
   callbacks:
     - switchyard_litellm.configuration.configured_plugin.ROUTING_PLUGIN
-
-general_settings:
-  master_key: os.environ/LITELLM_MASTER_KEY
-  database_url: os.environ/DATABASE_URL
