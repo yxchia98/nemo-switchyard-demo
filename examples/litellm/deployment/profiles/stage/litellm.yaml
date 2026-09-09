@@ -6,11 +6,11 @@ model_list:
       api_key: os.environ/OPENROUTER_API_KEY
   - model_name: switchyard/smart
     litellm_params:
-      model: openrouter/openrouter/free
+      model: openrouter/nvidia/nemotron-3.5-lightning:free
       api_key: os.environ/OPENROUTER_API_KEY
   # - model_name: switchyard/smart
   #   litellm_params:
-  #     model: openrouter/nvidia/nemotron-3.5-lightning:free
+  #     model: openrouter/openrouter/free
   #     api_key: os.environ/OPENROUTER_API_KEY
 
 router_settings:
