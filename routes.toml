@@ -4,6 +4,10 @@ schema_version = 1
 format = "openai_chat"
 base_url = "http://192.168.1.10:8000/v1/chat/completions"
 
+[llm_clients.local_nim_classifier]
+format = "openai_chat"
+base_url = "http://192.168.1.10:8000/v1/chat/completions"
+
 [llm_clients.openrouter]
 format = "openai_chat"
 base_url = "https://openrouter.ai/api/v1"
@@ -12,6 +16,11 @@ api_key_env = "OPENROUTER_API_KEY"
 [targets.weak]
 id = "nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4"
 llm_client = "local_nim"
+
+[targets.classifier]
+id = "nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4"
+llm_client = "local_nim_classifier"
+extra_body = { chat_template_kwargs = { enable_thinking = false } }
 
 [targets.strong]
 id = "openrouter/free"
@@ -38,15 +47,11 @@ escalation = { confirmations = 2, recent_turn_window = 28, window_message_chars 
 id = "switchyard/smart"
 type = "llm_classifier"
 mode = "capability"
-classifier_target = "weak"
+classifier_target = "classifier"
 strong_target = "strong"
 weak_target = "weak"
 base_threshold = 0.3
 threshold_step = 0.1
-prompt = """
-Estimate whether the weak target can complete the request.
-Return exactly one JSON object matching the response schema supplied with the request.
-"""
 
 [routes.stage]
 id = "switchyard/stage"
