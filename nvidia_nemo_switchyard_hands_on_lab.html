@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Dell APJ AI Innovation Hub hands-on workshop for NVIDIA NeMo Switchyard and LiteLLM.">
+<title>Dell APJ AI Innovation Hub | NeMo Switchyard Hands-on Lab</title>
+<script>
+(function(){var saved=localStorage.getItem('dell-apj-workshop-theme');var preferred=saved||(window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',preferred);})();
+</script>
+<style>
+:root{
+ --artifact-background:#ffffff;--artifact-surface:#f5f6f7;--artifact-surface-strong:#e1f0f8;--artifact-border:#c8d9e5;
+ --artifact-blue:#0672ce;--artifact-blue-hover:#005da8;--artifact-blue-deep:#002a58;--artifact-blue-mid:#0063b8;
+ --artifact-sky:#cce8f7;--artifact-glacier:#e8f5fb;--artifact-midnight:#0a1e2f;--artifact-white:#ffffff;
+ --artifact-text:#0a1e2f;--artifact-muted:#526778;--artifact-code:#071c2c;--artifact-code-text:#e7f4fb;
+ --artifact-focus:#0672ce;--artifact-positive-bg:#dff2fc;--artifact-positive-text:#003d6b;--artifact-warning-bg:#e8f5fb;--artifact-header-bg:#0672ce;--artifact-header-text:#ffffff;--artifact-header-control:#005da8;--artifact-header-control-hover:#002a58;--artifact-hero-bg:#cce8f7;--artifact-hero-text:#0a1e2f;
+}
+html[data-theme='dark']{
+ --artifact-background:#071521;--artifact-surface:#0d2232;--artifact-surface-strong:#12334a;--artifact-border:#25465d;
+ --artifact-blue:#4db7e5;--artifact-blue-hover:#83cef0;--artifact-blue-deep:#071521;--artifact-blue-mid:#2c9fd1;
+ --artifact-sky:#16425d;--artifact-glacier:#0e2a3d;--artifact-midnight:#e8f5fb;--artifact-white:#ffffff;
+ --artifact-text:#edf7fc;--artifact-muted:#a8c0cf;--artifact-code:#03101a;--artifact-code-text:#e7f4fb;
+ --artifact-focus:#83cef0;--artifact-positive-bg:#12334a;--artifact-positive-text:#d8f2ff;--artifact-warning-bg:#102d42;--artifact-header-bg:#0672ce;--artifact-header-text:#ffffff;--artifact-header-control:#005da8;--artifact-header-control-hover:#002a58;--artifact-hero-bg:#12334a;--artifact-hero-text:#edf7fc;
+}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--artifact-background);color:var(--artifact-text);font-family:"Arial Nova",Arial,Helvetica,sans-serif;font-size:16px;line-height:1.65}
+a{color:var(--artifact-blue);text-underline-offset:3px}a:hover{color:var(--artifact-blue-hover)}a:focus-visible,button:focus-visible,input:focus-visible,pre:focus-visible{outline:3px solid var(--artifact-focus);outline-offset:3px}
+.masthead{height:68px;border-bottom:1px solid var(--artifact-blue-hover);background:var(--artifact-header-bg);color:var(--artifact-header-text);display:flex;align-items:center;padding:0 30px;position:relative;z-index:4}.masthead-inner{width:100%;max-width:1180px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:24px}.hub-name{font-weight:700;letter-spacing:-.015em;color:var(--artifact-header-text)}html[data-theme='dark'] .hub-name{color:var(--artifact-header-text)}.masthead-actions{display:flex;align-items:center;gap:16px}.internal-tag{font-size:12px;color:var(--artifact-header-text);text-transform:uppercase;letter-spacing:.11em;font-weight:700}.theme-toggle{position:relative;width:76px;height:36px;flex:0 0 76px;border:1px solid var(--artifact-sky);border-radius:999px;background:var(--artifact-header-control);color:var(--artifact-header-text);padding:0;cursor:pointer;display:grid;grid-template-columns:repeat(2,1fr);align-items:stretch;justify-items:stretch;overflow:hidden}.theme-toggle:hover{background:var(--artifact-header-control-hover)}.theme-symbol{position:relative;z-index:2;display:flex;align-items:center;justify-content:center;width:100%;height:100%;font-family:"Segoe UI Symbol","Arial Unicode MS",sans-serif;font-size:15px;line-height:1;transition:color .25s ease}.theme-thumb{position:absolute;z-index:1;left:calc(25% - 13px);top:50%;width:26px;height:26px;border-radius:50%;background:var(--artifact-header-text);transform:translateY(-50%);transition:left .28s cubic-bezier(.2,.8,.2,1)}html[data-theme='dark'] .theme-thumb{left:calc(75% - 13px)}.theme-sun{color:var(--artifact-blue-deep)}.theme-moon{color:var(--artifact-header-text)}html[data-theme='dark'] .theme-sun{color:var(--artifact-header-text)}html[data-theme='dark'] .theme-moon{color:var(--artifact-blue-deep)}.sr-only{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
+.hero{background:var(--artifact-hero-bg);color:var(--artifact-hero-text);padding:74px 30px 66px;border-bottom:1px solid var(--artifact-border)}.hero-inner{max-width:1180px;margin:0 auto;display:grid;grid-template-columns:minmax(0,1.35fr) minmax(280px,.65fr);gap:76px;align-items:end}.hero-kicker{font-size:13px;letter-spacing:.12em;text-transform:uppercase;font-weight:700;margin:0 0 18px;color:var(--artifact-blue-deep)}html[data-theme='dark'] .hero-kicker{color:var(--artifact-blue)}.hero h1{font-family:"Arial Nova",Arial,sans-serif;font-size:clamp(3rem,7vw,6.2rem);font-weight:300;line-height:.92;letter-spacing:-.052em;margin:0 0 28px;color:var(--artifact-hero-text)}.hero h1 strong{font-weight:700}.hero-copy{font-size:clamp(1.05rem,1.8vw,1.32rem);max-width:760px;margin:0;color:var(--artifact-hero-text)}.hero-panel{border-top:3px solid var(--artifact-blue);padding-top:18px}.hero-panel-label{font-size:12px;letter-spacing:.11em;text-transform:uppercase;font-weight:700;margin-bottom:14px;color:var(--artifact-blue-deep)}html[data-theme='dark'] .hero-panel-label{color:var(--artifact-blue)}.hero-panel ul{margin:0;padding:0;list-style:none}.hero-panel li{padding:10px 0;border-bottom:1px solid var(--artifact-border);font-weight:700;color:var(--artifact-hero-text)}.hero-panel li:last-child{border-bottom:0}
+.workshop-map{max-width:1180px;margin:-1px auto 0;padding:0 30px}.map-grid{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid var(--artifact-border);border-top:0;background:var(--artifact-background)}.map-card{padding:24px 22px;text-decoration:none;color:var(--artifact-text);border-right:1px solid var(--artifact-border);display:grid;grid-template-columns:auto 1fr;column-gap:12px;align-items:baseline}.map-card:last-child{border-right:0}.map-card>span{font-size:12px;font-weight:700;color:var(--artifact-blue)}.map-card strong{font-size:18px}.map-card small{grid-column:2;color:var(--artifact-muted);line-height:1.35;margin-top:6px}.map-card:hover{background:var(--artifact-glacier);color:var(--artifact-text)}
+.progress-bar{position:sticky;top:0;z-index:3;background:var(--artifact-background);border-bottom:1px solid var(--artifact-border)}.progress-inner{max-width:1180px;margin:auto;padding:12px 30px;display:flex;align-items:center;gap:15px}.progress-track{height:6px;flex:1;background:var(--artifact-surface-strong);overflow:hidden}.progress-fill{height:100%;width:0;background:var(--artifact-blue);transition:width .25s ease}.progress-text{font-size:12px;font-weight:700;color:var(--artifact-muted);white-space:nowrap}
+.shell{max-width:1180px;margin:0 auto;padding:58px 30px 110px;display:grid;grid-template-columns:275px minmax(0,1fr);gap:70px}.rail{min-width:0}.rail-inner{position:sticky;top:62px}.rail-title{font-size:12px;text-transform:uppercase;letter-spacing:.11em;font-weight:700;color:var(--artifact-muted);margin-bottom:12px}.search{width:100%;padding:11px 12px;border:1px solid var(--artifact-border);background:var(--artifact-surface);color:var(--artifact-text);font:inherit;margin-bottom:16px}.toc{display:flex;flex-direction:column;max-height:66vh;overflow:auto;border-top:1px solid var(--artifact-border)}.toc a{display:grid;grid-template-columns:28px 1fr;gap:8px;padding:11px 8px;text-decoration:none;color:var(--artifact-muted);border-bottom:1px solid var(--artifact-border);line-height:1.2}.toc a:hover,.toc a.active{background:var(--artifact-glacier);color:var(--artifact-text)}.toc small{display:block;text-transform:uppercase;letter-spacing:.09em;font-size:9px;font-weight:700;color:var(--artifact-blue);margin-bottom:3px}.nav-num{font-size:11px;font-weight:700;color:var(--artifact-blue);padding-top:1px}.reset-btn{margin-top:16px;border:0;background:transparent;padding:0;color:var(--artifact-blue);font-weight:700;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+.content{min-width:0}.lab-step{padding:0 0 66px;margin:0 0 66px;border-bottom:1px solid var(--artifact-border);scroll-margin-top:68px}.lab-step:last-of-type{border-bottom:0}.step-header{display:flex;align-items:flex-start;justify-content:space-between;gap:28px;margin-bottom:26px}.step-heading{min-width:0}.step-meta{font-size:11px;text-transform:uppercase;letter-spacing:.11em;font-weight:700;color:var(--artifact-blue);margin-bottom:8px}.lab-step h2{font-family:"Arial Nova",Arial,sans-serif;font-weight:300;font-size:clamp(2.05rem,4vw,3.3rem);letter-spacing:-.04em;line-height:1.02;margin:0;color:var(--artifact-text)}.lab-step h3{font-size:1.4rem;letter-spacing:-.02em;line-height:1.2;margin:40px 0 14px;color:var(--artifact-text)}.lab-step p{max-width:780px;margin:0 0 18px}.lab-step ul,.lab-step ol{padding-left:1.35rem;margin:0 0 22px}.lab-step li{margin:8px 0;padding-left:4px}.lab-step li::marker{color:var(--artifact-blue)}.complete-btn{flex:0 0 auto;border:1px solid var(--artifact-blue);background:var(--artifact-background);color:var(--artifact-blue);padding:9px 12px;font-weight:700;cursor:pointer}.complete-btn:hover{background:var(--artifact-glacier)}.complete-btn.done{background:var(--artifact-blue);color:var(--artifact-white)}.lab-step.completed{opacity:.78}.lab-step.completed h2{text-decoration:line-through;text-decoration-thickness:1px}
+.lab-step code:not(pre code){font-family:"SFMono-Regular",Consolas,"Liberation Mono",monospace;font-size:.86em;background:var(--artifact-surface);border:1px solid var(--artifact-border);padding:.12em .35em;color:var(--artifact-text)}.code-shell{position:relative;margin:21px 0 28px}.code-shell pre{margin:0;background:var(--artifact-code);color:var(--artifact-code-text);border:1px solid var(--artifact-border);padding:24px 18px 20px;overflow:auto;font-family:"SFMono-Regular",Consolas,"Liberation Mono",monospace;font-size:13px;line-height:1.62;tab-size:2}.code-shell pre a{color:var(--artifact-code-text)}.copy-btn{position:absolute;right:10px;top:10px;z-index:2;border:1px solid var(--artifact-sky);background:var(--artifact-blue-deep);color:var(--artifact-white);padding:8px 10px;font-size:11px;font-weight:700;cursor:pointer}.copy-btn:hover{background:var(--artifact-blue-mid)}
+.security-note{margin:28px 0;padding:20px 22px;background:var(--artifact-warning-bg);color:var(--artifact-text);border:1px solid var(--artifact-border)}.security-note::before{content:"SECURITY";display:block;color:var(--artifact-blue);font-size:11px;font-weight:700;letter-spacing:.12em;margin-bottom:8px}.security-note p{margin:0}.table-scroll{overflow:auto;margin:24px 0 30px;border:1px solid var(--artifact-border)}table{border-collapse:collapse;width:100%;min-width:690px;font-size:14px}th,td{text-align:left;vertical-align:top;padding:14px 15px;border-bottom:1px solid var(--artifact-border)}th{font-size:11px;text-transform:uppercase;letter-spacing:.09em;background:var(--artifact-glacier);color:var(--artifact-blue-deep)}html[data-theme='dark'] th{color:var(--artifact-text)}tr:last-child td{border-bottom:0}tbody tr:hover{background:var(--artifact-surface)}.search-hidden{display:none!important}.no-results{display:none;padding:28px;border:1px solid var(--artifact-border);background:var(--artifact-surface);color:var(--artifact-muted)}.no-results.show{display:block}
+.footer{background:var(--artifact-blue-deep);color:var(--artifact-white);padding:38px 30px}.footer-inner{max-width:1180px;margin:auto;display:flex;justify-content:space-between;gap:28px;align-items:end}.footer strong{font-size:20px}.footer small{display:block;margin-top:5px;color:var(--artifact-sky)}.footer-note{font-size:12px;color:var(--artifact-sky);text-align:right}
+@media(max-width:920px){.hero-inner{grid-template-columns:1fr;gap:42px}.map-grid{grid-template-columns:repeat(2,1fr)}.map-card:nth-child(2){border-right:0}.map-card:nth-child(-n+2){border-bottom:1px solid var(--artifact-border)}.shell{grid-template-columns:1fr;gap:34px}.rail-inner{position:static}.toc{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));max-height:none}}
+@media(max-width:600px){.masthead,.hero,.workshop-map,.progress-inner,.shell,.footer{padding-left:18px;padding-right:18px}.hero{padding-top:54px}.hero h1{font-size:3rem}.map-grid,.toc{grid-template-columns:1fr}.map-card{border-right:0;border-bottom:1px solid var(--artifact-border)}.step-header{display:block}.complete-btn{margin-top:18px}.progress-text,.internal-tag{display:none}.masthead-actions{gap:8px}.footer-inner{display:block}.footer-note{text-align:left;margin-top:18px}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before,*::after{animation:none!important;transition:none!important}}
+@media print{body{margin:0;padding:.4in .6in;background:#fff;color:#111;print-color-adjust:exact;-webkit-print-color-adjust:exact}.masthead{padding:0;height:42px}.hero{padding:30px;background:#0672ce;color:#fff}.hero h1{font-size:38pt}.workshop-map,.progress-bar,.rail,.complete-btn,.copy-btn,.footer{display:none!important}.shell{display:block;max-width:100%;width:100%;padding:30px 0}.lab-step{break-inside:auto;margin-bottom:24px!important;padding-bottom:24px}.code-shell,pre,.security-note,.table-scroll,table,[class*="card"]{break-inside:avoid;box-shadow:none!important}.code-shell pre{white-space:pre-wrap;background:#f3f3f3;color:#111;border:1px solid rgba(0,0,0,.12)}.code-shell pre a{color:#111}.table-scroll,[style*="overflow"]{max-height:none!important;overflow:visible!important}button,[role="button"],.interactive-only{display:none!important}*,*::before,*::after{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<header class="masthead" data-glean-id="dell-hub-masthead"><div class="masthead-inner"><div class="hub-name">Dell APJ AI Innovation Hub</div><div class="masthead-actions"><div class="internal-tag">Hands-on technical workshop</div><button class="theme-toggle" id="themeToggle" type="button" aria-label="Switch to dark mode" aria-pressed="false"><span class="theme-symbol theme-sun" aria-hidden="true">☀</span><span class="theme-symbol theme-moon" aria-hidden="true">☾</span><span class="theme-thumb" aria-hidden="true"></span><span class="sr-only" id="themeLabel">Dark mode</span></button></div></div></header>
+<section class="hero" data-glean-id="workshop-hero"><div class="hero-inner"><div><p class="hero-kicker">Intelligent model routing</p><h1 data-glean-id="workshop-title">NeMo Switchyard<br><strong>Hands-on Lab</strong></h1><p class="hero-copy">Deploy dynamic inference routing, compare model-selection policies, and connect Switchyard intelligence to a governed LiteLLM AI Gateway.</p></div><aside class="hero-panel" data-glean-id="workshop-outcomes"><div class="hero-panel-label">You will build</div><ul><li>A standalone Switchyard server</li><li>Classifier and policy routes</li><li>A LiteLLM-governed access path</li></ul></aside></div></section>
+<section class="workshop-map" data-glean-id="workshop-map"><div class="map-grid"><a class="map-card" href="#prerequisites" data-glean-id="map-prepare"><span>01</span><strong>Prepare</strong><small>Set up credentials, tooling, and source materials.</small></a><a class="map-card" href="#deploy-standalone-switchyard" data-glean-id="map-build"><span>02</span><strong>Build</strong><small>Configure and launch the standalone routing service.</small></a><a class="map-card" href="#test-the-smart-classifier-route" data-glean-id="map-route"><span>03</span><strong>Route</strong><small>Exercise classifier-driven and policy-based routing.</small></a><a class="map-card" href="#litellm-and-switchyard" data-glean-id="map-govern"><span>04</span><strong>Govern</strong><small>Place LiteLLM controls in front of Switchyard intelligence.</small></a></div></section>
+<div class="progress-bar" data-glean-id="workshop-progress"><div class="progress-inner"><div class="progress-track"><div class="progress-fill" id="progressFill"></div></div><div class="progress-text" id="progressText">0 of 14 steps complete</div></div></div>
+<div class="shell"><aside class="rail" data-glean-id="workshop-navigation"><div class="rail-inner"><div class="rail-title">Lab guide</div><input id="searchInput" class="search" type="search" placeholder="Search steps and commands" aria-label="Search workshop"><nav class="toc" aria-label="Workshop sections"><a href="#learning-objectives" data-target="learning-objectives"><span class="nav-num">01</span><span><small>Orient</small>Learning objectives</span></a><a href="#prerequisites" data-target="prerequisites"><span class="nav-num">02</span><span><small>Prepare</small>Prerequisites</span></a><a href="#register-for-an-nvidia-developer-account" data-target="register-for-an-nvidia-developer-account"><span class="nav-num">03</span><span><small>Prepare</small>Register for an NVIDIA Developer account</span></a><a href="#register-for-openrouter" data-target="register-for-openrouter"><span class="nav-num">04</span><span><small>Prepare</small>Register for OpenRouter</span></a><a href="#install-required-packages" data-target="install-required-packages"><span class="nav-num">05</span><span><small>Prepare</small>Install required packages</span></a><a href="#clone-the-workshop-materials" data-target="clone-the-workshop-materials"><span class="nav-num">06</span><span><small>Prepare</small>Clone the workshop materials</span></a><a href="#deploy-standalone-switchyard" data-target="deploy-standalone-switchyard"><span class="nav-num">07</span><span><small>Build</small>Deploy standalone Switchyard</span></a><a href="#start-and-use-switchyard" data-target="start-and-use-switchyard"><span class="nav-num">08</span><span><small>Build</small>Start and use Switchyard</span></a><a href="#test-the-smart-classifier-route" data-target="test-the-smart-classifier-route"><span class="nav-num">09</span><span><small>Route</small>Test the smart classifier route</span></a><a href="#start-the-frontend-ui" data-target="start-the-frontend-ui"><span class="nav-num">10</span><span><small>Route</small>Start the frontend UI</span></a><a href="#explore-other-switchyard-routing-policies" data-target="explore-other-switchyard-routing-policies"><span class="nav-num">11</span><span><small>Route</small>Explore other Switchyard routing policies</span></a><a href="#litellm-and-switchyard" data-target="litellm-and-switchyard"><span class="nav-num">12</span><span><small>Govern</small>LiteLLM and Switchyard</span></a><a href="#cleanup" data-target="cleanup"><span class="nav-num">13</span><span><small>Close</small>Cleanup</span></a><a href="#references" data-target="references"><span class="nav-num">14</span><span><small>Reference</small>References</span></a></nav><button class="reset-btn" id="resetProgress" type="button">Reset completion</button></div></aside><main class="content" id="content" data-glean-id="workshop-content"><section class="lab-step" data-glean-id="section-learning-objectives" data-phase="orient" id="learning-objectives"><div class="step-header" data-glean-id="step-header-learning-objectives"><div class="step-heading"><div class="step-meta">Orient · Step 01</div><h2 data-glean-id="heading-learning-objectives" id="heading-learning-objectives">Learning objectives</h2></div><button aria-pressed="false" class="complete-btn" data-step="learning-objectives" type="button">Mark complete</button></div>
+
+<p>By the end of this workshop, you will be able to:</p>
+<ul>
+<li>Install and configure a standalone NeMo Switchyard server.</li>
+<li>Define targets and routing policies in TOML.</li>
+<li>Send OpenAI-compatible inference requests through a Switchyard route.</li>
+<li>Observe how a classifier selects a weak or strong model.</li>
+<li>Use LiteLLM and Switchyard together as complementary gateway and model-routing layers.</li>
+<li>Create and use a LiteLLM virtual key for controlled API access.</li>
+</ul>
+</section><section class="lab-step" data-glean-id="section-prerequisites" data-phase="prepare" id="prerequisites"><div class="step-header" data-glean-id="step-header-prerequisites"><div class="step-heading"><div class="step-meta">Prepare · Step 02</div><h2 data-glean-id="heading-prerequisites" id="heading-prerequisites">Prerequisites</h2></div><button aria-pressed="false" class="complete-btn" data-step="prerequisites" type="button">Mark complete</button></div>
+
+<p>Install or obtain the following before starting:</p>
+<ul>
+<li>Git.</li>
+<li>A native build toolchain.</li>
+<li>Rust and Cargo.</li>
+<li><code>curl</code> and <code>jq</code>.</li>
+<li>Node.js and npm for the frontend UI.</li>
+<li>Docker with Docker Compose for the LiteLLM exercise.</li>
+<li>An API key for <a href="https://build.nvidia.com/" rel="noopener noreferrer" target="_blank">NVIDIA-hosted NIMs</a>, <a href="https://openrouter.ai/" rel="noopener noreferrer" target="_blank">OpenRouter</a>, or another OpenAI-compatible endpoint.</li>
+</ul>
+<blockquote class="security-note" data-glean-id="security-note-1">
+<p>Security note: Never commit API keys to this repository or paste real keys into workshop documentation. If a key is exposed, revoke it immediately and generate a replacement.</p>
+</blockquote>
+</section><section class="lab-step" data-glean-id="section-register-for-an-nvidia-developer-account" data-phase="prepare" id="register-for-an-nvidia-developer-account"><div class="step-header" data-glean-id="step-header-register-for-an-nvidia-developer-account"><div class="step-heading"><div class="step-meta">Prepare · Step 03</div><h2 data-glean-id="heading-register-for-an-nvidia-developer-account" id="heading-register-for-an-nvidia-developer-account">Register for an NVIDIA Developer account</h2></div><button aria-pressed="false" class="complete-btn" data-step="register-for-an-nvidia-developer-account" type="button">Mark complete</button></div>
+
+<p>To use NVIDIA-hosted NIMs:</p>
+<ol type="1">
+<li>Go to <a href="https://build.nvidia.com/" rel="noopener noreferrer" target="_blank">NVIDIA API Catalog</a> and sign in or create an account.</li>
+<li>Select your profile in the upper-right corner and open the API Keys page.</li>
+<li>Select Generate API Key, enter a name, and generate the key.</li>
+<li>Store the key securely. You will export it as an environment variable later.</li>
+</ol>
+</section><section class="lab-step" data-glean-id="section-register-for-openrouter" data-phase="prepare" id="register-for-openrouter"><div class="step-header" data-glean-id="step-header-register-for-openrouter"><div class="step-heading"><div class="step-meta">Prepare · Step 04</div><h2 data-glean-id="heading-register-for-openrouter" id="heading-register-for-openrouter">Register for OpenRouter</h2></div><button aria-pressed="false" class="complete-btn" data-step="register-for-openrouter" type="button">Mark complete</button></div>
+
+<p>To use OpenRouter as the provider for the strong target:</p>
+<ol type="1">
+<li>Go to <a href="https://openrouter.ai/" rel="noopener noreferrer" target="_blank">OpenRouter</a> and sign in or create an account.</li>
+<li>Open the <a href="https://openrouter.ai/keys" rel="noopener noreferrer" target="_blank">OpenRouter Keys page</a>.</li>
+<li>Select <strong>Create Key</strong>, enter a descriptive workshop name, and create the key.</li>
+<li>Copy the key and store it in a secure password manager or secrets store.</li>
+<li>Confirm that the account has access or credits for the models used by the workshop.</li>
+</ol>
+<blockquote class="security-note" data-glean-id="security-note-2">
+<p>Security note: Do not place the key directly in <code>routes.toml</code>. The configuration references <code>OPENROUTER_API_KEY</code>, which you will export as an environment variable when starting Switchyard.</p>
+</blockquote>
+</section><section class="lab-step" data-glean-id="section-install-required-packages" data-phase="prepare" id="install-required-packages"><div class="step-header" data-glean-id="step-header-install-required-packages"><div class="step-heading"><div class="step-meta">Prepare · Step 05</div><h2 data-glean-id="heading-install-required-packages" id="heading-install-required-packages">Install required packages</h2></div><button aria-pressed="false" class="complete-btn" data-step="install-required-packages" type="button">Mark complete</button></div>
+
+<p>On Ubuntu or WSL, install the build prerequisites and Rust with <code>rustup</code>:</p>
+<div class="sourceCode" id="cb1"><div class="code-shell" data-glean-id="code-shell-1"><button aria-label="Copy code to clipboard" class="copy-btn" type="button">Copy</button><pre class="sourceCode bash" data-glean-id="code-block-1" tabindex="0"><code class="sourceCode bash"><span id="cb1-1"><a aria-hidden="true" href="#cb1-1" tabindex="-1"></a><span class="fu">sudo</span> apt-get update</span>
+<span id="cb1-2"><a aria-hidden="true" href="#cb1-2" tabindex="-1"></a><span class="fu">sudo</span> apt-get install <span class="at">-y</span> build-essential curl git jq</span>
+<span id="cb1-3"><a aria-hidden="true" href="#cb1-3" tabindex="-1"></a><span class="ex">curl</span> <span class="at">--proto</span> <span class="st">'=https'</span> <span class="at">--tlsv1.2</span> <span class="at">-sSf</span> https://sh.rustup.rs <span class="kw">|</span> <span class="fu">sh</span></span>
+<span id="cb1-4"><a aria-hidden="true" href="#cb1-4" tabindex="-1"></a><span class="bu">source</span> <span class="st">"</span><span class="va">$HOME</span><span class="st">/.cargo/env"</span></span></code></pre></div></div>
+<p>Install <code>uv</code> for the repository's Python tooling and CI checks. It is not required to build or run the Rust server:</p>
+<div class="sourceCode" id="cb2"><div class="code-shell" data-glean-id="code-shell-2"><button aria-label="Copy code to clipboard" class="copy-btn" type="button">Copy</button><pre class="sourceCode bash" data-glean-id="code-block-2" tabindex="0"><code class="sourceCode bash"><span id="cb2-1"><a aria-hidden="true" href="#cb2-1" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-LsSf</span> https://astral.sh/uv/install.sh <span class="kw">|</span> <span class="fu">sh</span></span></code></pre></div></div>
+<p>If either installer updates your shell configuration, restart the shell before continuing. Verify the tools:</p>
+<div class="sourceCode" id="cb3"><div class="code-shell" data-glean-id="code-shell-3"><button aria-label="Copy code to clipboard" class="copy-btn" type="button">Copy</button><pre class="sourceCode bash" data-glean-id="code-block-3" tabindex="0"><code class="sourceCode bash"><span id="cb3-1"><a aria-hidden="true" href="#cb3-1" tabindex="-1"></a><span class="fu">git</span> <span class="at">--version</span></span>
+<span id="cb3-2"><a aria-hidden="true" href="#cb3-2" tabindex="-1"></a><span class="ex">rustc</span> <span class="at">--version</span></span>
+<span id="cb3-3"><a aria-hidden="true" href="#cb3-3" tabindex="-1"></a><span class="ex">cargo</span> <span class="at">--version</span></span>
+<span id="cb3-4"><a aria-hidden="true" href="#cb3-4" tabindex="-1"></a><span class="ex">uv</span> <span class="at">--version</span></span>
+<span id="cb3-5"><a aria-hidden="true" href="#cb3-5" tabindex="-1"></a><span class="ex">jq</span> <span class="at">--version</span></span>
+<span id="cb3-6"><a aria-hidden="true" href="#cb3-6" tabindex="-1"></a><span class="ex">node</span> <span class="at">--version</span></span>
+<span id="cb3-7"><a aria-hidden="true" href="#cb3-7" tabindex="-1"></a><span class="ex">npm</span> <span class="at">--version</span></span>
+<span id="cb3-8"><a aria-hidden="true" href="#cb3-8" tabindex="-1"></a><span class="ex">docker</span> compose version</span></code></pre></div></div>
+</section><section class="lab-step" data-glean-id="section-clone-the-workshop-materials" data-phase="prepare" id="clone-the-workshop-materials"><div class="step-header" data-glean-id="step-header-clone-the-workshop-materials"><div class="step-heading"><div class="step-meta">Prepare · Step 06</div><h2 data-glean-id="heading-clone-the-workshop-materials" id="heading-clone-the-workshop-materials">Clone the workshop materials</h2></div><button aria-pressed="false" class="complete-btn" data-step="clone-the-workshop-materials" type="button">Mark complete</button></div>
+
+<div class="sourceCode" id="cb4"><div class="code-shell" data-glean-id="code-shell-4"><button aria-label="Copy code to clipboard" class="copy-btn" type="button">Copy</button><pre class="sourceCode bash" data-glean-id="code-block-4" tabindex="0"><code class="sourceCode bash"><span id="cb4-1"><a aria-hidden="true" href="#cb4-1" tabindex="-1"></a><span class="fu">git</span> clone https://github.com/yxchia98/nemo-switchyard-demo.git</span>
+<span id="cb4-2"><a aria-hidden="true" href="#cb4-2" tabindex="-1"></a><span class="bu">cd</span> nemo-switchyard-demo</span></code></pre></div></div>
+</section><section class="lab-step" data-glean-id="section-deploy-standalone-switchyard" data-phase="build" id="deploy-standalone-switchyard"><div class="step-header" data-glean-id="step-header-deploy-standalone-switchyard"><div class="step-heading"><div class="step-meta">Build · Step 07</div><h2 data-glean-id="heading-deploy-standalone-switchyard" id="heading-deploy-standalone-switchyard">Deploy standalone Switchyard</h2></div><button aria-pressed="false" class="complete-btn" data-step="deploy-standalone-switchyard" type="button">Mark complete</button></div>
+
+<section class="level3" id="install-the-server">
+<h3 id="heading-install-the-server">Install the server</h3>
+<p>Install the Rust server from <a href="https://crates.io/" rel="noopener noreferrer" target="_blank">crates.io</a>:</p>
+<div class="sourceCode" id="cb5"><div class="code-shell" data-glean-id="code-shell-5"><button aria-label="Copy code to clipboard" class="copy-btn" type="button">Copy</button><pre class="sourceCode bash" data-glean-id="code-block-5" tabindex="0"><code class="sourceCode bash"><span id="cb5-1"><a aria-hidden="true" href="#cb5-1" tabindex="-1"></a><span class="ex">cargo</span> install <span class="at">--locked</span> <span class="at">--force</span> switchyard-server <span class="at">--version</span> 0.2.0</span>
+<span id="cb5-2"><a aria-hidden="true" href="#cb5-2" tabindex="-1"></a><span class="ex">switchyard-server</span> <span class="at">--help</span></span></code></pre></div></div>
+<p>Cargo builds the release binary and installs it into <code>~/.cargo/bin</code> by default.</p>
+</section>
+<section class="level3" id="configure-routes">
+<h3 id="heading-configure-routes">Configure routes</h3>
+<p>The Rust server reads an explicit TOML configuration file. Create <code>routes.toml</code> with the following targets and routes:</p>
+<div class="sourceCode" id="cb6"><div class="code-shell" data-glean-id="code-shell-6"><button aria-label="Copy code to clipboard" class="copy-btn" type="button">Copy</button><pre class="sourceCode toml" data-glean-id="code-block-6" tabindex="0"><code class="sourceCode toml"><span id="cb6-1"><a aria-hidden="true" href="#cb6-1" tabindex="-1"></a><span class="dt">schema_version</span> <span class="op">=</span> <span class="dv">1</span></span>
+<span id="cb6-2"><a aria-hidden="true" href="#cb6-2" tabindex="-1"></a></span>
+<span id="cb6-3"><a aria-hidden="true" href="#cb6-3" tabindex="-1"></a><span class="kw">[llm_clients.local_nim]</span></span>
+<span id="cb6-4"><a aria-hidden="true" href="#cb6-4" tabindex="-1"></a><span class="dt">format</span> <span class="op">=</span> <span class="st">"openai_chat"</span></span>
+<span id="cb6-5"><a aria-hidden="true" href="#cb6-5" tabindex="-1"></a><span class="dt">base_url</span> <span class="op">=</span> <span class="st">"http://192.168.1.10:8000/v1/chat/completions"</span></span>
+<span id="cb6-6"><a aria-hidden="true" href="#cb6-6" tabindex="-1"></a></span>
+<span id="cb6-7"><a aria-hidden="true" href="#cb6-7" tabindex="-1"></a><span class="kw">[llm_clients.local_nim_classifier]</span></span>
+<span id="cb6-8"><a aria-hidden="true" href="#cb6-8" tabindex="-1"></a><span class="dt">format</span> <span class="op">=</span> <span class="st">"openai_chat"</span></span>
+<span id="cb6-9"><a aria-hidden="true" href="#cb6-9" tabindex="-1"></a><span class="dt">base_url</span> <span class="op">=</span> <span class="st">"http://192.168.1.10:8000/v1/chat/completions"</span></span>
+<span id="cb6-10"><a aria-hidden="true" href="#cb6-10" tabindex="-1"></a></span>
+<span id="cb6-11"><a aria-hidden="true" href="#cb6-11" tabindex="-1"></a><span class="kw">[llm_clients.openrouter]</span></span>
+<span id="cb6-12"><a aria-hidden="true" href="#cb6-12" tabindex="-1"></a><span class="dt">format</span> <span class="op">=</span> <span class="st">"openai_chat"</span></span>
+<span id="cb6-13"><a aria-hidden="true" href="#cb6-13" tabindex="-1"></a><span class="dt">base_url</span> <span class="op">=</span> <span class="st">"https://openrouter.ai/api/v1"</span></span>
+<span id="cb6-14"><a aria-hidden="true" href="#cb6-14" tabindex="-1"></a><span class="dt">api_key_env</span> <span class="op">=</span> <span class="st">"OPENROUTER_API_KEY"</span></span>
+<span id="cb6-15"><a aria-hidden="true" href="#cb6-15" tabindex="-1"></a></span>
+<span id="cb6-16"><a aria-hidden="true" href="#cb6-16" tabindex="-1"></a><span class="kw">[targets.weak]</span></span>
+<span id="cb6-17"><a aria-hidden="true" href="#cb6-17" tabindex="-1"></a><span class="dt">id</span> <span class="op">=</span> <span class="st">"nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4"</span></span>
+<span id="cb6-18"><a aria-hidden="true" href="#cb6-18" tabindex="-1"></a><span class="dt">llm_client</span> <span class="op">=</span> <span class="st">"local_nim"</span></span>
+<span id="cb6-19"><a aria-hidden="true" href="#cb6-19" tabindex="-1"></a></span>
+<span id="cb6-20"><a aria-hidden="true" href="#cb6-20" tabindex="-1"></a><span class="kw">[targets.classifier]</span></span>
+<span id="cb6-21"><a aria-hidden="true" href="#cb6-21" tabindex="-1"></a><span class="dt">id</span> <span class="op">=</span> <span class="st">"nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4"</span></span>
+<span id="cb6-22"><a aria-hidden="true" href="#cb6-22" tabindex="-1"></a><span class="dt">llm_client</span> <span class="op">=</span> <span class="st">"local_nim_classifier"</span></span>
+<span id="cb6-23"><a aria-hidden="true" href="#cb6-23" tabindex="-1"></a><span class="dt">extra_body</span> <span class="op">=</span> <span class="op">{ </span><span class="dt">chat_template_kwargs</span><span class="op"> =</span> <span class="op">{ </span><span class="dt">enable_thinking</span><span class="op"> =</span> <span class="cn">false</span><span class="op"> } }</span></span>
+<span id="cb6-24"><a aria-hidden="true" href="#cb6-24" tabindex="-1"></a></span>
+<span id="cb6-25"><a aria-hidden="true" href="#cb6-25" tabindex="-1"></a><span class="kw">[targets.strong]</span></span>
+<span id="cb6-26"><a aria-hidden="true" href="#cb6-26" tabindex="-1"></a><span class="dt">id</span> <span class="op">=</span> <span class="st">"openrouter/free"</span></span>
+<span id="cb6-27"><a aria-hidden="true" href="#cb6-27" tabindex="-1"></a><span class="dt">llm_client</span> <span class="op">=</span> <span class="st">"openrouter"</span></span>
+<span id="cb6-28"><a aria-hidden="true" href="#cb6-28" tabindex="-1"></a></span>
+<span id="cb6-29"><a aria-hidden="true" href="#cb6-29" tabindex="-1"></a><span class="kw">[routes.ab_test]</span></span>
+<span id="cb6-30"><a aria-hidden="true" href="#cb6-30" tabindex="-1"></a><span class="dt">id</span> <span class="op">=</span> <span class="st">"switchyard/ab-test"</span></span>
+<span id="cb6-31"><a aria-hidden="true" href="#cb6-31" tabindex="-1"></a><span class="dt">type</span> <span class="op">=</span> <span class="st">"random"</span></span>
+<span id="cb6-32"><a aria-hidden="true" href="#cb6-32" tabindex="-1"></a><span class="dt">targets</span> <span class="op">=</span> <span class="op">[</span><span class="st">"strong"</span><span class="op">,</span> <span class="st">"weak"</span><span class="op">]</span></span>
+<span id="cb6-33"><a aria-hidden="true" href="#cb6-33" tabindex="-1"></a><span class="dt">weights</span> <span class="op">=</span> <span class="op">[</span><span class="dv">3</span><span class="op">,</span> <span class="dv">7</span><span class="op">]</span></span>
+<span id="cb6-34"><a aria-hidden="true" href="#cb6-34" tabindex="-1"></a><span class="dt">seed</span> <span class="op">=</span> <span class="dv">42</span></span>
+<span id="cb6-35"><a aria-hidden="true" href="#cb6-35" tabindex="-1"></a></span>
+<span id="cb6-36"><a aria-hidden="true" href="#cb6-36" tabindex="-1"></a><span class="kw">[routes.escalate]</span></span>
+<span id="cb6-37"><a aria-hidden="true" href="#cb6-37" tabindex="-1"></a><span class="dt">id</span> <span class="op">=</span> <span class="st">"switchyard/escalate"</span></span>
+<span id="cb6-38"><a aria-hidden="true" href="#cb6-38" tabindex="-1"></a><span class="dt">type</span> <span class="op">=</span> <span class="st">"llm_classifier"</span></span>
+<span id="cb6-39"><a aria-hidden="true" href="#cb6-39" tabindex="-1"></a><span class="dt">mode</span> <span class="op">=</span> <span class="st">"escalation"</span></span>
+<span id="cb6-40"><a aria-hidden="true" href="#cb6-40" tabindex="-1"></a><span class="dt">classifier_target</span> <span class="op">=</span> <span class="st">"weak"</span></span>
+<span id="cb6-41"><a aria-hidden="true" href="#cb6-41" tabindex="-1"></a><span class="dt">strong_target</span> <span class="op">=</span> <span class="st">"strong"</span></span>
+<span id="cb6-42"><a aria-hidden="true" href="#cb6-42" tabindex="-1"></a><span class="dt">weak_target</span> <span class="op">=</span> <span class="st">"weak"</span></span>
+<span id="cb6-43"><a aria-hidden="true" href="#cb6-43" tabindex="-1"></a><span class="dt">prompt</span> <span class="op">=</span> <span class="st">"Judge whether the weak model is stuck. Return the required structured verdict."</span></span>
+<span id="cb6-44"><a aria-hidden="true" href="#cb6-44" tabindex="-1"></a><span class="dt">escalation</span> <span class="op">=</span> <span class="op">{ </span><span class="dt">confirmations</span><span class="op"> =</span> <span class="dv">2</span><span class="op">, </span><span class="dt">recent_turn_window</span><span class="op"> =</span> <span class="dv">28</span><span class="op">, </span><span class="dt">window_message_chars</span><span class="op"> =</span> <span class="dv">500</span><span class="op"> }</span></span>
+<span id="cb6-45"><a aria-hidden="true" href="#cb6-45" tabindex="-1"></a></span>
+<span id="cb6-46"><a aria-hidden="true" href="#cb6-46" tabindex="-1"></a><span class="kw">[routes.smart]</span></span>
+<span id="cb6-47"><a aria-hidden="true" href="#cb6-47" tabindex="-1"></a><span class="dt">id</span> <span class="op">=</span> <span class="st">"switchyard/smart"</span></span>
+<span id="cb6-48"><a aria-hidden="true" href="#cb6-48" tabindex="-1"></a><span class="dt">type</span> <span class="op">=</span> <span class="st">"llm_classifier"</span></span>
+<span id="cb6-49"><a aria-hidden="true" href="#cb6-49" tabindex="-1"></a><span class="dt">mode</span> <span class="op">=</span> <span class="st">"capability"</span></span>
+<span id="cb6-50"><a aria-hidden="true" href="#cb6-50" tabindex="-1"></a><span class="dt">classifier_target</span> <span class="op">=</span> <span class="st">"classifier"</span></span>
+<span id="cb6-51"><a aria-hidden="true" href="#cb6-51" tabindex="-1"></a><span class="dt">strong_target</span> <span class="op">=</span> <span class="st">"strong"</span></span>
+<span id="cb6-52"><a aria-hidden="true" href="#cb6-52" tabindex="-1"></a><span class="dt">weak_target</span> <span class="op">=</span> <span class="st">"weak"</span></span>
+<span id="cb6-53"><a aria-hidden="true" href="#cb6-53" tabindex="-1"></a><span class="dt">base_threshold</span> <span class="op">=</span> <span class="fl">0.5</span></span>
+<span id="cb6-54"><a aria-hidden="true" href="#cb6-54" tabindex="-1"></a><span class="dt">threshold_step</span> <span class="op">=</span> <span class="fl">0.1</span></span>
+<span id="cb6-55"><a aria-hidden="true" href="#cb6-55" tabindex="-1"></a></span>
+<span id="cb6-56"><a aria-hidden="true" href="#cb6-56" tabindex="-1"></a><span class="kw">[routes.stage]</span></span>
+<span id="cb6-57"><a aria-hidden="true" href="#cb6-57" tabindex="-1"></a><span class="dt">id</span> <span class="op">=</span> <span class="st">"switchyard/stage"</span></span>
+<span id="cb6-58"><a aria-hidden="true" href="#cb6-58" tabindex="-1"></a><span class="dt">type</span> <span class="op">=</span> <span class="st">"stage_router"</span></span>
+<span id="cb6-59"><a aria-hidden="true" href="#cb6-59" tabindex="-1"></a><span class="dt">capable_target</span> <span class="op">=</span> <span class="st">"strong"</span></span>
+<span id="cb6-60"><a aria-hidden="true" href="#cb6-60" tabindex="-1"></a><span class="dt">efficient_target</span> <span class="op">=</span> <span class="st">"weak"</span></span>
+<span id="cb6-61"><a aria-hidden="true" href="#cb6-61" tabindex="-1"></a><span class="dt">picker</span> <span class="op">=</span> <span class="st">"efficient_first"</span></span>
+<span id="cb6-62"><a aria-hidden="true" href="#cb6-62" tabindex="-1"></a><span class="dt">confidence_threshold</span> <span class="op">=</span> <span class="fl">0.5</span></span>
+<span id="cb6-63"><a aria-hidden="true" href="#cb6-63" tabindex="-1"></a><span class="dt">recent_turn_window</span> <span class="op">=</span> <span class="dv">3</span> </span></code></pre></div></div>
+<p>Model availability and identifiers can change. Before the workshop, confirm that every configured model is available to the selected provider and account.</p>
+</section>
+</section><section class="lab-step" data-glean-id="section-start-and-use-switchyard" data-phase="build" id="start-and-use-switchyard"><div class="step-header" data-glean-id="step-header-start-and-use-switchyard"><div class="step-heading"><div class="step-meta">Build · Step 08</div><h2 data-glean-id="heading-start-and-use-switchyard" id="heading-start-and-use-switchyard">Start and use Switchyard</h2></div><button aria-pressed="false" class="complete-btn" data-step="start-and-use-switchyard" type="button">Mark complete</button></div>
+
+<p>Export the provider credential, validate the configuration without binding a socket, and then start the server:</p>
+<div class="sourceCode" id="cb7"><div class="code-shell" data-glean-id="code-shell-7"><button aria-label="Copy code to clipboard" class="copy-btn" type="button">Copy</button><pre class="sourceCode bash" data-glean-id="code-block-7" tabindex="0"><code class="sourceCode bash"><span id="cb7-1"><a aria-hidden="true" href="#cb7-1" tabindex="-1"></a><span class="bu">export</span> <span class="va">OPENROUTER_API_KEY</span><span class="op">=</span><span class="st">"&lt;your-openrouter-api-key&gt;"</span></span>
+<span id="cb7-2"><a aria-hidden="true" href="#cb7-2" tabindex="-1"></a></span>
+<span id="cb7-3"><a aria-hidden="true" href="#cb7-3" tabindex="-1"></a><span class="ex">switchyard-server</span> <span class="at">--config</span> routes.toml <span class="at">--dry-run</span></span>
+<span id="cb7-4"><a aria-hidden="true" href="#cb7-4" tabindex="-1"></a><span class="ex">switchyard-server</span> <span class="at">--config</span> routes.toml <span class="dt">\</span></span>
+<span id="cb7-5"><a aria-hidden="true" href="#cb7-5" tabindex="-1"></a>  <span class="at">--host</span> 0.0.0.0 <span class="dt">\</span></span>
+<span id="cb7-6"><a aria-hidden="true" href="#cb7-6" tabindex="-1"></a>  <span class="at">--port</span> 4000</span></code></pre></div></div>
+<p>Use <code>127.0.0.1</code> rather than <code>0.0.0.0</code> in client URLs. The server binds to <code>0.0.0.0</code>, while clients connect to a reachable host address.</p>
+<p>Switchyard accepts clients that use the OpenAI Chat Completions, Anthropic Messages, or OpenAI Responses API. A route ID is supplied as the requested model name.</p>
+<p>In another terminal, list the exposed models and routes:</p>
+<div class="sourceCode" id="cb8"><div class="code-shell" data-glean-id="code-shell-8"><button aria-label="Copy code to clipboard" class="copy-btn" type="button">Copy</button><pre class="sourceCode bash" data-glean-id="code-block-8" tabindex="0"><code class="sourceCode bash"><span id="cb8-1"><a aria-hidden="true" href="#cb8-1" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-s</span> http://127.0.0.1:4000/v1/models <span class="kw">|</span> <span class="ex">jq</span></span></code></pre></div></div>
+</section><section class="lab-step" data-glean-id="section-test-the-smart-classifier-route" data-phase="route" id="test-the-smart-classifier-route"><div class="step-header" data-glean-id="step-header-test-the-smart-classifier-route"><div class="step-heading"><div class="step-meta">Route · Step 09</div><h2 data-glean-id="heading-test-the-smart-classifier-route" id="heading-test-the-smart-classifier-route">Test the smart classifier route</h2></div><button aria-pressed="false" class="complete-btn" data-step="test-the-smart-classifier-route" type="button">Mark complete</button></div>
+
+<p>At inference time, the <code>switchyard/smart</code> route uses the configured classifier to estimate whether the weak target can complete the request. It then selects the weak or strong target according to the routing policy.</p>
+<section class="level3" id="try-a-simple-request">
+<h3 id="heading-try-a-simple-request">Try a simple request</h3>
+<div class="sourceCode" id="cb9"><div class="code-shell" data-glean-id="code-shell-9"><button aria-label="Copy code to clipboard" class="copy-btn" type="button">Copy</button><pre class="sourceCode bash" data-glean-id="code-block-9" tabindex="0"><code class="sourceCode bash"><span id="cb9-1"><a aria-hidden="true" href="#cb9-1" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-s</span> http://127.0.0.1:4000/v1/chat/completions <span class="dt">\</span></span>
+<span id="cb9-2"><a aria-hidden="true" href="#cb9-2" tabindex="-1"></a>  <span class="at">-H</span> <span class="st">'Content-Type: application/json'</span> <span class="dt">\</span></span>
+<span id="cb9-3"><a aria-hidden="true" href="#cb9-3" tabindex="-1"></a>  <span class="at">-d</span> <span class="st">'{</span></span>
+<span id="cb9-4"><a aria-hidden="true" href="#cb9-4" tabindex="-1"></a><span class="st">    "model": "switchyard/smart",</span></span>
+<span id="cb9-5"><a aria-hidden="true" href="#cb9-5" tabindex="-1"></a><span class="st">    "messages": [</span></span>
+<span id="cb9-6"><a aria-hidden="true" href="#cb9-6" tabindex="-1"></a><span class="st">      {</span></span>
+<span id="cb9-7"><a aria-hidden="true" href="#cb9-7" tabindex="-1"></a><span class="st">        "role": "user",</span></span>
+<span id="cb9-8"><a aria-hidden="true" href="#cb9-8" tabindex="-1"></a><span class="st">        "content": "Reply with a short, friendly greeting."</span></span>
+<span id="cb9-9"><a aria-hidden="true" href="#cb9-9" tabindex="-1"></a><span class="st">      }</span></span>
+<span id="cb9-10"><a aria-hidden="true" href="#cb9-10" tabindex="-1"></a><span class="st">    ]</span></span>
+<span id="cb9-11"><a aria-hidden="true" href="#cb9-11" tabindex="-1"></a><span class="st">  }'</span> <span class="kw">|</span> <span class="ex">jq</span></span></code></pre></div></div>
+<p>The classifier should normally select the efficient target for this low-complexity request. Routing is model-driven, so verify the selected target from the available response metadata or server logs rather than treating the outcome as guaranteed.</p>
+</section>
+<section class="level3" id="try-a-more-complex-request">
+<h3 id="heading-try-a-more-complex-request">Try a more complex request</h3>
+<div class="sourceCode" id="cb10"><div class="code-shell" data-glean-id="code-shell-10"><button aria-label="Copy code to clipboard" class="copy-btn" type="button">Copy</button><pre class="sourceCode bash" data-glean-id="code-block-10" tabindex="0"><code class="sourceCode bash"><span id="cb10-1"><a aria-hidden="true" href="#cb10-1" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-s</span> http://127.0.0.1:4000/v1/chat/completions <span class="dt">\</span></span>
+<span id="cb10-2"><a aria-hidden="true" href="#cb10-2" tabindex="-1"></a>  <span class="at">-H</span> <span class="st">'Content-Type: application/json'</span> <span class="dt">\</span></span>
+<span id="cb10-3"><a aria-hidden="true" href="#cb10-3" tabindex="-1"></a>  <span class="at">-d</span> <span class="st">'{</span></span>
+<span id="cb10-4"><a aria-hidden="true" href="#cb10-4" tabindex="-1"></a><span class="st">    "model": "switchyard/smart",</span></span>
+<span id="cb10-5"><a aria-hidden="true" href="#cb10-5" tabindex="-1"></a><span class="st">    "messages": [</span></span>
+<span id="cb10-6"><a aria-hidden="true" href="#cb10-6" tabindex="-1"></a><span class="st">      {</span></span>
+<span id="cb10-7"><a aria-hidden="true" href="#cb10-7" tabindex="-1"></a><span class="st">        "role": "user",</span></span>
+<span id="cb10-8"><a aria-hidden="true" href="#cb10-8" tabindex="-1"></a><span class="st">        "content": "Explain the derivative of fibonacci."</span></span>
+<span id="cb10-9"><a aria-hidden="true" href="#cb10-9" tabindex="-1"></a><span class="st">      }</span></span>
+<span id="cb10-10"><a aria-hidden="true" href="#cb10-10" tabindex="-1"></a><span class="st">    ]</span></span>
+<span id="cb10-11"><a aria-hidden="true" href="#cb10-11" tabindex="-1"></a><span class="st">  }'</span> <span class="kw">|</span> <span class="ex">jq</span></span></code></pre></div></div>
+<p>The classifier may select the capable target for this more demanding reasoning task. Compare the selected target, latency, and response quality with the simple request.</p>
+</section>
+</section><sectionclass="lab-step" data-glean-id="section-start-the-frontend-ui" data-phase="route" id="start-the-frontend-ui"><div class="step-header" data-glean-id="step-header-start-the-frontend-ui"><div class="step-heading"><div class="step-meta">Route · Step 10</div><h2 data-glean-id="heading-start-the-frontend-ui" id="heading-start-the-frontend-ui">Start the frontend UI</h2></div><button aria-pressed="false" class="complete-btn" data-step="start-the-frontend-ui" type="button">Mark complete</button></div>
+
+<p>From the repository root, enter the frontend directory:</p>
+<div class="sourceCode" id="cb11"><div class="code-shell" data-glean-id="code-shell-11"><button aria-label="Copy code to clipboard" class="copy-btn" type="button">Copy</button><pre class="sourceCode bash" data-glean-id="code-block-11" tabindex="0"><code class="sourceCode bash"><span id="cb11-1"><a aria-hidden="true" href="#cb11-1" tabindex="-1"></a><span class="bu">cd</span> switchyard-lab-ui</span>
+<span id="cb11-2"><a aria-hidden="true" href="#cb11-2" tabindex="-1"></a><span class="ex">npm</span> install</span>
+<span id="cb11-3"><a aria-hidden="true" href="#cb11-3" tabindex="-1"></a><span class="fu">cp</span> .env.example .env.local</span>
+<span id="cb11-4"><a aria-hidden="true" href="#cb11-4" tabindex="-1"></a><span class="ex">npm</span> run dev</span></code></pre></div></div>
+<p>Open <a href="http://127.0.0.1:3000/" rel="noopener noreferrer" target="_blank"><span>http://127.0.0.1:3000/</span></a> in a browser. Send both a simple and a complex prompt to the Smart router and compare the routing outcomes.</p>
+</section><section class="lab-step" data-glean-id="section-explore-other-switchyard-routing-policies" data-phase="route" id="explore-other-switchyard-routing-policies"><div class="step-header" data-glean-id="step-header-explore-other-switchyard-routing-policies"><div class="step-heading"><div class="step-meta">Route · Step 11</div><h2 data-glean-id="heading-explore-other-switchyard-routing-policies" id="heading-explore-other-switchyard-routing-policies">Explore other Switchyard routing policies</h2></div><button aria-pressed="false" class="complete-btn" data-step="explore-other-switchyard-routing-policies" type="button">Mark complete</button></div>
+
+<p>Use the frontend or API to test the other configured routes:</p>
+<ul>
+<li><code>switchyard/ab-test</code> distributes traffic between targets using configured weights.</li>
+<li><code>switchyard/escalate</code> evaluates whether a conversation should move from the weak target to the strong target.</li>
+<li><code>switchyard/stage</code> chooses between an efficient and capable target according to the stage-router policy.</li>
+</ul>
+</section><section class="lab-step" data-glean-id="section-litellm-and-switchyard" data-phase="govern" id="litellm-and-switchyard"><div class="step-header" data-glean-id="step-header-litellm-and-switchyard"><div class="step-heading"><div class="step-meta">Govern · Step 12</div><h2 data-glean-id="heading-litellm-and-switchyard" id="heading-litellm-and-switchyard">LiteLLM and Switchyard</h2></div><button aria-pressed="false" class="complete-btn" data-step="litellm-and-switchyard" type="button">Mark complete</button></div>
+
+<section class="level3" id="what-is-litellm">
+<h3 id="heading-what-is-litellm">What is LiteLLM?</h3>
+<p><a href="https://docs.litellm.ai/docs/" rel="noopener noreferrer" target="_blank">LiteLLM</a> is an AI gateway that gives applications a consistent, OpenAI-compatible API for accessing multiple model providers and deployments. As the client-facing gateway, it can centralize authentication, virtual keys, model access, budgets, rate limits, usage tracking, logging, and observability.</p>
+<p>LiteLLM and NeMo Switchyard are complementary:</p>
+<ul>
+<li>LiteLLM governs who can call the AI service, which public model groups they can access, and how usage is controlled and observed.</li>
+<li>Switchyard determines which configured target model should handle an individual inference request.</li>
+<li>LiteLLM provides the stable application-facing endpoint, while Switchyard provides inference-time routing intelligence behind that endpoint.</li>
+</ul>
+<p>This separation allows platform teams to manage access and operations in LiteLLM without placing model-selection logic in every application. Switchyard can evolve routing policies independently while applications continue using a stable API and model name.</p>
+</section>
+<section class="level3" id="conceptual-request-flow">
+<h3 id="heading-conceptual-request-flow">Conceptual request flow</h3>
+<div class="code-shell" data-glean-id="code-shell-12"><button aria-label="Copy code to clipboard" class="copy-btn" type="button">Copy</button><pre class="text" data-glean-id="code-block-12" tabindex="0"><code>Application
+  → LiteLLM AI Gateway
+      → authenticate virtual key
+      → enforce model access, budget, and rate limits
+      → resolve the public model group
+  → NeMo Switchyard route
+      → evaluate the configured routing policy
+      → select one target model
+  → LiteLLM deployment/provider selection
+  → provider inference
+  → response returned through LiteLLM to the application</code></pre></div>
+<p>In the workshop implementation, the lower-level flow may appear as:</p>
+<div class="code-shell" data-glean-id="code-shell-13"><button aria-label="Copy code to clipboard" class="copy-btn" type="button">Copy</button><pre class="text" data-glean-id="code-block-13" tabindex="0"><code>LiteLLM Router
+  → Switchyard routing plugin
+  → Algorithm.run_stream()
+  → selected candidate plus optional request delta
+  → LiteLLM deployment selection
+  → deployment callback receives the same routing object
+  → provider inference</code></pre></div>
+<p>The first diagram explains responsibilities at the architecture level. The second describes the plugin-level execution path used by this lab.</p>
+</section>
+<section class="level3" id="why-use-both-components">
+<h3 id="heading-why-use-both-components">Why use both components?</h3>
+<div class="table-scroll" data-glean-id="table-wrapper-1"><table>
+<thead>
+<tr>
+<th>Requirement</th>
+<th>LiteLLM</th>
+<th>NeMo Switchyard</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Stable, OpenAI-compatible gateway endpoint</td>
+<td>Primary responsibility</td>
+<td>Can expose compatible inference APIs</td>
+</tr>
+<tr>
+<td>Virtual keys and client authentication</td>
+<td>Primary responsibility</td>
+<td>Not the focus of this lab</td>
+</tr>
+<tr>
+<td>Budgets, rate limits, and model-access policy</td>
+<td>Primary responsibility</td>
+<td>Not the focus of this lab</td>
+</tr>
+<tr>
+<td>Per-request target selection</td>
+<td>Coordinates deployment resolution</td>
+<td>Primary responsibility</td>
+</tr>
+<tr>
+<td>Classifier, escalation, random, or stage routing</td>
+<td>Exposes the selected route to clients</td>
+<td>Executes the routing policy</td>
+</tr>
+<tr>
+<td>Gateway usage tracking and observability</td>
+<td>Primary responsibility</td>
+<td>Adds route and target-level routing signals</td>
+</tr>
+</tbody>
+</table></div>
+</section>
+<section class="level3" id="start-the-local-litellm-proxy">
+<h3 id="heading-start-the-local-litellm-proxy">Start the local LiteLLM proxy</h3>
+<p>Prerequisites are Docker Compose and an OpenRouter key with access to the example models.</p>
+<p>From the repository root:</p>
+<div class="sourceCode" id="cb14"><div class="code-shell" data-glean-id="code-shell-14"><button aria-label="Copy code to clipboard" class="copy-btn" type="button">Copy</button><pre class="sourceCode bash" data-glean-id="code-block-14" tabindex="0"><code class="sourceCode bash"><span id="cb14-1"><a aria-hidden="true" href="#cb14-1" tabindex="-1"></a><span class="bu">cd</span> litellm</span>
+<span id="cb14-2"><a aria-hidden="true" href="#cb14-2" tabindex="-1"></a><span class="fu">cp</span> deployment/.env.example deployment/.env</span></code></pre></div></div>
+<p>Open <code>deployment/.env</code> and set the required values, including <code>OPENROUTER_API_KEY</code>, <code>UI_USERNAME</code>, and <code>UI_PASSWORD</code>. Do not commit this file.</p>
+<p>Start the environment:</p>
+<div class="sourceCode" id="cb15"><div class="code-shell" data-glean-id="code-shell-15"><button aria-label="Copy code to clipboard" class="copy-btn" type="button">Copy</button><pre class="sourceCode bash" data-glean-id="code-block-15" tabindex="0"><code class="sourceCode bash"><span id="cb15-1"><a aria-hidden="true" href="#cb15-1" tabindex="-1"></a><span class="ex">docker</span> compose <span class="at">-f</span> deployment/compose.yaml up <span class="at">-d</span> <span class="at">--build</span> <span class="at">--wait</span></span>
+<span id="cb15-2"><a aria-hidden="true" href="#cb15-2" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-fsS</span> http://127.0.0.1:4000/health/liveliness</span></code></pre></div></div>
+<p>The default profile is <code>stage</code>. Send a request to its public Switchyard model group:</p>
+<div class="sourceCode" id="cb16"><div class="code-shell" data-glean-id="code-shell-16"><button aria-label="Copy code to clipboard" class="copy-btn" type="button">Copy</button><pre class="sourceCode bash" data-glean-id="code-block-16" tabindex="0"><code class="sourceCode bash"><span id="cb16-1"><a aria-hidden="true" href="#cb16-1" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-i</span> http://127.0.0.1:4000/v1/chat/completions <span class="dt">\</span></span>
+<span id="cb16-2"><a aria-hidden="true" href="#cb16-2" tabindex="-1"></a>  <span class="at">-H</span> <span class="st">'Content-Type: application/json'</span> <span class="dt">\</span></span>
+<span id="cb16-3"><a aria-hidden="true" href="#cb16-3" tabindex="-1"></a>  <span class="at">-d</span> <span class="st">'{</span></span>
+<span id="cb16-4"><a aria-hidden="true" href="#cb16-4" tabindex="-1"></a><span class="st">    "model": "switchyard",</span></span>
+<span id="cb16-5"><a aria-hidden="true" href="#cb16-5" tabindex="-1"></a><span class="st">    "messages": [</span></span>
+<span id="cb16-6"><a aria-hidden="true" href="#cb16-6" tabindex="-1"></a><span class="st">      {"role": "user", "content": "Reply with the word hello."}</span></span>
+<span id="cb16-7"><a aria-hidden="true" href="#cb16-7" tabindex="-1"></a><span class="st">    ],</span></span>
+<span id="cb16-8"><a aria-hidden="true" href="#cb16-8" tabindex="-1"></a><span class="st">    "max_tokens": 64</span></span>
+<span id="cb16-9"><a aria-hidden="true" href="#cb16-9" tabindex="-1"></a><span class="st">  }'</span></span></code></pre></div></div>
+<p>LiteLLM keeps the response body's <code>model</code> field equal to the public model group. In this lab configuration, inspect the <code>x-litellm-model-name</code> response header to identify the concrete model selected through Switchyard.</p>
+</section>
+<section class="level3" id="access-the-litellm-ui">
+<h3 id="heading-access-the-litellm-ui">Access the LiteLLM UI</h3>
+<p>Open <a href="http://127.0.0.1:4000/ui" rel="noopener noreferrer" target="_blank"><span>http://127.0.0.1:4000/ui</span></a> and sign in with the <code>UI_USERNAME</code> and <code>UI_PASSWORD</code> values configured in <code>deployment/.env</code>.</p>
+</section>
+<section class="level3" id="create-and-use-a-virtual-key">
+<h3 id="heading-create-and-use-a-virtual-key">Create and use a virtual key</h3>
+<p>In the LiteLLM UI:</p>
+<ol type="1">
+<li>Create a new virtual key.</li>
+<li>Grant the key access only to the workshop's Switchyard-backed model or model group.</li>
+<li>Add a budget or rate limit if the workshop configuration supports it.</li>
+<li>Copy the generated key and store it securely.</li>
+</ol>
+<p>Export the virtual key in the terminal that will call LiteLLM:</p>
+<div class="sourceCode" id="cb17"><div class="code-shell" data-glean-id="code-shell-17"><button aria-label="Copy code to clipboard" class="copy-btn" type="button">Copy</button><pre class="sourceCode bash" data-glean-id="code-block-17" tabindex="0"><code class="sourceCode bash"><span id="cb17-1"><a aria-hidden="true" href="#cb17-1" tabindex="-1"></a><span class="bu">export</span> <span class="va">LITELLM_API_KEY</span><span class="op">=</span><span class="st">"&lt;your-litellm-virtual-api-key&gt;"</span></span></code></pre></div></div>
+<p>Send an authenticated inference request:</p>
+<div class="sourceCode" id="cb18"><div class="code-shell" data-glean-id="code-shell-18"><button aria-label="Copy code to clipboard" class="copy-btn" type="button">Copy</button><pre class="sourceCode bash" data-glean-id="code-block-18" tabindex="0"><code class="sourceCode bash"><span id="cb18-1"><a aria-hidden="true" href="#cb18-1" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-i</span> http://127.0.0.1:4000/v1/chat/completions <span class="dt">\</span></span>
+<span id="cb18-2"><a aria-hidden="true" href="#cb18-2" tabindex="-1"></a>  <span class="at">-H</span> <span class="st">"Authorization: Bearer </span><span class="va">${LITELLM_API_KEY}</span><span class="st">"</span> <span class="dt">\</span></span>
+<span id="cb18-3"><a aria-hidden="true" href="#cb18-3" tabindex="-1"></a>  <span class="at">-H</span> <span class="st">'Content-Type: application/json'</span> <span class="dt">\</span></span>
+<span id="cb18-4"><a aria-hidden="true" href="#cb18-4" tabindex="-1"></a>  <span class="at">-d</span> <span class="st">'{</span></span>
+<span id="cb18-5"><a aria-hidden="true" href="#cb18-5" tabindex="-1"></a><span class="st">    "model": "switchyard/smart",</span></span>
+<span id="cb18-6"><a aria-hidden="true" href="#cb18-6" tabindex="-1"></a><span class="st">    "messages": [</span></span>
+<span id="cb18-7"><a aria-hidden="true" href="#cb18-7" tabindex="-1"></a><span class="st">      {"role": "user", "content": "Reply with the word hello."}</span></span>
+<span id="cb18-8"><a aria-hidden="true" href="#cb18-8" tabindex="-1"></a><span class="st">    ],</span></span>
+<span id="cb18-9"><a aria-hidden="true" href="#cb18-9" tabindex="-1"></a><span class="st">    "max_tokens": 64</span></span>
+<span id="cb18-10"><a aria-hidden="true" href="#cb18-10" tabindex="-1"></a><span class="st">  }'</span></span></code></pre></div></div>
+<p>If the deployment exposes the Switchyard route under the public group name <code>switchyard</code> rather than <code>switchyard/smart</code>, use the public name configured in LiteLLM. The virtual key must be authorized for that same public model name.</p>
+</section>
+<section class="level3" id="validate-the-integration">
+<h3 id="heading-validate-the-integration">Validate the integration</h3>
+<p>Confirm the following:</p>
+<ul>
+<li>A request without a valid LiteLLM virtual key is rejected when authentication is enabled.</li>
+<li>A valid key can access only its permitted model groups.</li>
+<li>LiteLLM records gateway-level usage for the request.</li>
+<li>Switchyard selects a target according to the configured route.</li>
+<li>The response reaches the application through the same LiteLLM endpoint.</li>
+<li>Simple and complex prompts can produce different target selections while the application-facing model name remains stable.</li>
+</ul>
+</section>
+</section><section class="lab-step" data-glean-id="section-cleanup" data-phase="close" id="cleanup"><div class="step-header" data-glean-id="step-header-cleanup"><div class="step-heading"><div class="step-meta">Close · Step 13</div><h2 data-glean-id="heading-cleanup" id="heading-cleanup">Cleanup</h2></div><button aria-pressed="false" class="complete-btn" data-step="cleanup" type="button">Mark complete</button></div>
+
+<p>Stop the LiteLLM workshop environment:</p>
+<div class="sourceCode" id="cb19"><div class="code-shell" data-glean-id="code-shell-19"><button aria-label="Copy code to clipboard" class="copy-btn" type="button">Copy</button><pre class="sourceCode bash" data-glean-id="code-block-19" tabindex="0"><code class="sourceCode bash"><span id="cb19-1"><a aria-hidden="true" href="#cb19-1" tabindex="-1"></a><span class="ex">docker</span> compose <span class="at">-f</span> deployment/compose.yaml down</span></code></pre></div></div>
+<p>Stop the standalone Switchyard and frontend processes with <code>Ctrl+C</code> in their respective terminals.</p>
+<p>Unset credentials when the lab is complete:</p>
+<div class="sourceCode" id="cb20"><div class="code-shell" data-glean-id="code-shell-20"><button aria-label="Copy code to clipboard" class="copy-btn" type="button">Copy</button><pre class="sourceCode bash" data-glean-id="code-block-20" tabindex="0"><code class="sourceCode bash"><span id="cb20-1"><a aria-hidden="true" href="#cb20-1" tabindex="-1"></a><span class="bu">unset</span> <span class="va">NVIDIA_API_KEY</span></span>
+<span id="cb20-2"><a aria-hidden="true" href="#cb20-2" tabindex="-1"></a><span class="bu">unset</span> <span class="va">OPENROUTER_API_KEY</span></span>
+<span id="cb20-3"><a aria-hidden="true" href="#cb20-3" tabindex="-1"></a><span class="bu">unset</span> <span class="va">LITELLM_API_KEY</span></span></code></pre></div></div>
+</section><section class="lab-step" data-glean-id="section-references" data-phase="reference" id="references"><div class="step-header" data-glean-id="step-header-references"><div class="step-heading"><div class="step-meta">Reference · Step 14</div><h2 data-glean-id="heading-references" id="heading-references">References</h2></div><button aria-pressed="false" class="complete-btn" data-step="references" type="button">Mark complete</button></div>
+
+<ul>
+<li><a href="https://docs.nvidia.com/nemo/gym/model-server/switchyard/" rel="noopener noreferrer" target="_blank">NVIDIA NeMo Switchyard documentation</a></li>
+<li><a href="https://docs.litellm.ai/docs/" rel="noopener noreferrer" target="_blank">LiteLLM documentation</a></li>
+<li><a href="https://docs.litellm.ai/docs/proxy/architecture" rel="noopener noreferrer" target="_blank">LiteLLM proxy architecture</a></li>
+<li><a href="https://docs.litellm.ai/docs/proxy/virtual_keys" rel="noopener noreferrer" target="_blank">LiteLLM virtual keys</a></li>
+<li><a href="https://docs.litellm.ai/docs/routing" rel="noopener noreferrer" target="_blank">LiteLLM routing</a></li>
+<li><a href="https://docs.litellm.ai/docs/providers/openai_compatible" rel="noopener noreferrer" target="_blank">LiteLLM OpenAI-compatible providers</a></li>
+</ul>
+</section><div class="no-results" id="noResults">No workshop steps match that search.</div></main></div>
+<footer class="footer" data-glean-id="workshop-footer"><div class="footer-inner"><div><strong>Dell APJ AI Innovation Hub</strong><small>Exploring practical, governed AI infrastructure.</small></div><div class="footer-note">NVIDIA NeMo Switchyard × LiteLLM<br>Keep credentials out of source control.</div></div></footer>
+<script>
+const themeKey='dell-apj-workshop-theme';const themeToggle=document.getElementById('themeToggle');const themeLabel=document.getElementById('themeLabel');function renderThemeControl(){const dark=document.documentElement.getAttribute('data-theme')==='dark';themeToggle.setAttribute('aria-pressed',String(dark));themeToggle.setAttribute('aria-label',dark?'Switch to light mode':'Switch to dark mode');themeLabel.textContent=dark?'Light mode':'Dark mode';}themeToggle.addEventListener('click',()=>{const next=document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark';document.documentElement.setAttribute('data-theme',next);localStorage.setItem(themeKey,next);renderThemeControl();});renderThemeControl();
+const storageKey='dell-apj-switchyard-progress-v2';const steps=[...document.querySelectorAll('.lab-step')];let done=new Set(JSON.parse(localStorage.getItem(storageKey)||'[]'));
+function renderProgress(){steps.forEach(s=>{const on=done.has(s.id);s.classList.toggle('completed',on);const b=s.querySelector('.complete-btn');b.classList.toggle('done',on);b.setAttribute('aria-pressed',String(on));b.textContent=on?'Completed':'Mark complete';});const n=done.size;document.getElementById('progressFill').style.width=Math.round(n/steps.length*100)+'%';document.getElementById('progressText').textContent=`${n} of ${steps.length} steps complete`;localStorage.setItem(storageKey,JSON.stringify([...done]));}
+document.querySelectorAll('.complete-btn').forEach(b=>b.addEventListener('click',()=>{done.has(b.dataset.step)?done.delete(b.dataset.step):done.add(b.dataset.step);renderProgress();}));document.getElementById('resetProgress').addEventListener('click',()=>{done.clear();renderProgress();});renderProgress();
+document.querySelectorAll('.copy-btn').forEach(btn=>btn.addEventListener('click',async()=>{const code=btn.parentElement.querySelector('pre').innerText;try{await navigator.clipboard.writeText(code);btn.textContent='Copied';setTimeout(()=>btn.textContent='Copy',1400)}catch(e){btn.textContent='Select + copy';}}));
+const input=document.getElementById('searchInput');input.addEventListener('keydown',e=>{if(e.key==='Enter')e.preventDefault();});input.addEventListener('input',e=>{const q=e.target.value.trim().toLowerCase();let visible=0;steps.forEach(s=>{const hit=!q||s.innerText.toLowerCase().includes(q);s.classList.toggle('search-hidden',!hit);if(hit)visible++;});document.getElementById('noResults').classList.toggle('show',visible===0);});
+const links=[...document.querySelectorAll('.toc a')];const observer=new IntersectionObserver(entries=>{entries.filter(e=>e.isIntersecting).forEach(e=>links.forEach(a=>a.classList.toggle('active',a.dataset.target===e.target.id)));},{rootMargin:'-12% 0px -75% 0px'});steps.forEach(s=>observer.observe(s));
+if(window.GleanBridge){window.GleanBridge.postMessage({actionId:'export-pdf',type:'glean-add-menu',metadata:{label:'Export as PDF',icon:'export'}});window.GleanBridge.onMessage('action',data=>{if(data.actionId==='export-pdf')window.print();});}
+function prepareChartsForPrint(){document.querySelectorAll('[_echarts_instance_]').forEach(function(el){if(!window.echarts)return;var chart=echarts.getInstanceByDom(el);if(!chart)return;var img=new Image();img.src=chart.getDataURL({type:'png',pixelRatio:2});img.className='print-chart-img';img.style.cssText='width:100%;height:100%;object-fit:contain;position:absolute;top:0;left:0;z-index:10;';el.dataset.prevPosition=el.style.position;el.style.position='relative';el.appendChild(img);});}
+function cleanUpAfterPrint(){document.querySelectorAll('.print-chart-img').forEach(img=>img.remove());}window.addEventListener('beforeprint',prepareChartsForPrint);window.addEventListener('afterprint',cleanUpAfterPrint);
+</script>
+</body></html>
