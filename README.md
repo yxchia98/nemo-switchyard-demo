@@ -306,7 +306,7 @@ Prerequisites are Docker Compose and an OpenRouter key with access to the exampl
 From the repository root:
 
 ```bash
-cd litellm
+cd examples/litellm
 cp deployment/.env.example deployment/.env
 ```
 
